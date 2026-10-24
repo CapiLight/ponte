@@ -148,7 +148,9 @@
         "sim": "Sim",
         "outra_pessoa": "Não, aconteceu com outra pessoa",
         "nao_sei": "Não sei"
-      }
+      },
+      "por_evento": true,
+      "dica": "Use \"sim\" quando o acontecimento afetou quem escreveu e \"outra_pessoa\" quando afetou vizinhos, familiares ou terceiros."
     },
     {
       "chave": "acontecimento",
@@ -159,13 +161,17 @@
         "incendio": "Incêndio",
         "outro": "Outro evento",
         "nao_sei": "Não sei"
-      }
+      },
+      "por_evento": true,
+      "identifica_evento": true
     },
     {
       "chave": "descricao_acontecimento",
       "pergunta": "Descreva o acontecimento em poucas palavras",
       "rotulo": "Descrição do acontecimento",
-      "tipo": "texto"
+      "tipo": "texto",
+      "por_evento": true,
+      "dica": "Copie a parte do relato que descreve o acontecimento."
     },
     {
       "chave": "saiu_da_residencia",
@@ -175,13 +181,18 @@
         "sim": "Sim",
         "nao": "Não",
         "nao_sei": "Não sei"
-      }
+      },
+      "por_evento": true,
+      "identifica_evento": true,
+      "dica": "Use \"sim\" somente se o relato disser que a pessoa precisou sair da própria residência. Alagação no bairro ou na cidade não basta."
     },
     {
       "chave": "data_evento",
       "pergunta": "Data do acontecimento",
       "rotulo": "Data do acontecimento",
-      "tipo": "data"
+      "tipo": "data",
+      "por_evento": true,
+      "identifica_evento": true
     },
     {
       "chave": "data_referencia",
@@ -222,7 +233,8 @@
         "nao": "Não",
         "nao_sei": "Não sei"
       },
-      "so_do_relato": true
+      "so_do_relato": true,
+      "dica": "Use \"sim\" somente se o relato disser que a pessoa recebeu bolsa ou auxílio da assistência estudantil."
     }
   ],
   "ramos": [

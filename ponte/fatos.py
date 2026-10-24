@@ -49,6 +49,9 @@ class Campo:
     so_do_relato: bool = False
     padrao: str | None = None
     nota_padrao: str = ""
+    por_evento: bool = False
+    identifica_evento: bool = False
+    dica: str = ""
 
 
 ESTADOS_DECLARADOS = (Estado.CONFIRMADO, Estado.INFORMADO)

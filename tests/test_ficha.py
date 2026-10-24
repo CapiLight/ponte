@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 
 from ponte.fatos import Caso
-from ponte.ficha import PASTA_DAS_FICHAS, FichaInvalida, ler_ficha
+from ponte.ficha import PASTA_DAS_FICHAS, FichaInvalida, ler_ficha, para_json
 from ponte.motor import gerar_plano
 from ponte.resumo import gerar_resumo
 
@@ -88,3 +88,8 @@ def test_dependencias_sao_derivadas_da_condicao_quando_a_ficha_nao_as_declara():
     plano = gerar_plano(ficha, Caso.novo(ficha.campos, date(2026, 10, 24)))
     pergunta = next(o for o in plano.orientacoes if o.chave == "esclarecer.perdeu_documentos")
     assert pergunta.depende_de == ("perdeu_documentos", "aconteceu_com_voce")
+
+
+def test_ficha_serializada_e_lida_de_novo_fica_igual():
+    ficha = ler_ficha(DADOS)
+    assert ler_ficha(json.loads(json.dumps(para_json(ficha)))) == ficha
