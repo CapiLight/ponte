@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-from ponte.fatos import CAMPOS, Caso, descrever_valor
-from ponte.regras import Orientacao, Plano
+from ponte.fatos import Caso
+from ponte.plano import Orientacao, Plano
 
 
 @dataclass(frozen=True)
@@ -33,8 +33,7 @@ def descrever(mudanca: Mudanca, caso_antes: Caso, caso_depois: Caso) -> str:
     if not mudanca.campos_alterados:
         return texto
     alteracoes = "; ".join(
-        f"“{CAMPOS[chave].rotulo}” de {descrever_valor(chave, caso_antes.fatos[chave])} "
-        f"para {descrever_valor(chave, caso_depois.fatos[chave])}"
+        f"“{caso_depois.campos[chave].rotulo}” de {caso_antes.descrever(chave)} para {caso_depois.descrever(chave)}"
         for chave in mudanca.campos_alterados
     )
     return f"{texto} Motivo: você alterou {alteracoes}."

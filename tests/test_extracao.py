@@ -9,8 +9,11 @@ from google.genai import errors
 
 from ponte.extracao import FalhaNaExtracao, extrair, interpretar_resposta
 from ponte.fatos import Caso, Estado, Origem
-from ponte.regras import Tipo, gerar_plano
+from ponte.ficha import carregar_ficha
+from ponte.motor import gerar_plano
+from ponte.plano import Tipo
 
+FICHA = carregar_ficha("ufac-proaes-01-2026")
 RELATO = (
     "No dia 10 de outubro de 2026, minha casa foi alagada. "
     "Precisei sair da minha residência e perdi meus documentos pessoais."
@@ -172,8 +175,8 @@ def test_instrucao_maliciosa_nao_produz_fato_confirmado_nem_campo_extra():
     assert "saiu_da_residencia" not in sugestoes
     assert all(fato.estado is not Estado.CONFIRMADO for fato in sugestoes.values())
 
-    caso = Caso.novo(date(2026, 10, 24)).aplicar_sugestoes(sugestoes, "v1")
-    assert not gerar_plano(caso).do_tipo(Tipo.PASSO)
+    caso = Caso.novo(FICHA.campos, date(2026, 10, 24)).aplicar_sugestoes(sugestoes, "v1")
+    assert not gerar_plano(FICHA, caso).do_tipo(Tipo.PASSO)
 
 
 @pytest.mark.parametrize("texto", ["não é json", "[]", json.dumps({"sem_eventos": True})])

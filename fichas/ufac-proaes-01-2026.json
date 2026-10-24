@@ -1,0 +1,879 @@
+{
+  "chave": "ufac-proaes-01-2026",
+  "versao": 1,
+  "geracao": {
+    "modo": "curadoria_manual",
+    "descricao": "Montada à mão pela equipe a partir do edital e dos anexos; trechos conferidos contra as páginas dos PDFs.",
+    "gerada_em": "2026-10-24"
+  },
+  "edital": {
+    "instituicao": "Universidade Federal do Acre",
+    "orgao": "Pró-Reitoria de Assuntos Estudantis (Proaes)",
+    "numero": "01/2026",
+    "processo": "23107.000688/2026-82",
+    "objeto": "Edital de Seleção do Programa de Auxílio Emergencial (E-01/26)",
+    "assinado_em": "2026-01-23",
+    "pagina_oficial": "https://www3.ufac.br/proaes/2026/edital-ndeg-01-2026-proaes-selecao-do-programa-de-auxilio-emergencial-e-01-26",
+    "canais_de_duvida": [
+      "coaps.dae@ufac.br (Campus Sede)",
+      "proaesczs@ufac.br (Campus Floresta)"
+    ],
+    "conferencia_de_alteracoes": "Em 24/10/2026, a listagem da página oficial não continha adendo nem retificação; havia resultados de chamadas até a 11ª, de 08/10/2026."
+  },
+  "limite": "Este plano consulta apenas orientações sobre saída da residência por alagação, incêndio ou outro evento adverso e perda de documentos pessoais. Outros requisitos do edital não foram avaliados. A análise do pedido é da Proaes.",
+  "documentos": [
+    {
+      "chave": "edital",
+      "titulo": "Edital nº 01/2026, SEI 1956124",
+      "url": "https://www3.ufac.br/proaes/2026/edital-ndeg-01-2026-proaes-selecao-do-programa-de-auxilio-emergencial-e-01-26/sei_1956124_edital_01.pdf",
+      "arquivo_local": "fontes/ufac-proaes-01-2026/sei_1956124_edital_01.pdf",
+      "sha256": "4e5a84cb1277d43f14cdef9a9480ee36a14096ee798184bf459ee7a23b1129c6",
+      "paginas": 9,
+      "consultado_em": "2026-10-24"
+    },
+    {
+      "chave": "anexos",
+      "titulo": "Anexos - Auxílio Emergencial 2026",
+      "url": "https://www3.ufac.br/proaes/2026/edital-ndeg-01-2026-proaes-selecao-do-programa-de-auxilio-emergencial-e-01-26/anexos-auxilio-emergencial-2026.pdf",
+      "arquivo_local": "fontes/ufac-proaes-01-2026/anexos-auxilio-emergencial-2026.pdf",
+      "sha256": "220e904a5f6f25e061437d33d8a1755b3000755a190c58b3bc56c6ffe98fb16c",
+      "paginas": 8,
+      "consultado_em": "2026-10-24"
+    }
+  ],
+  "trechos": [
+    {
+      "chave": "2.2",
+      "rotulo": "Item 2.2",
+      "documento": "edital",
+      "pagina": 2,
+      "texto": "Caracteriza-se por emergência, para fins de cobertura deste Auxílio, a incapacidade temporária de suprir as necessidades básicas, prioritariamente nos aspectos de moradia e alimentação do estudante universitário, a saber:"
+    },
+    {
+      "chave": "2.2.b",
+      "rotulo": "Item 2.2, alínea b",
+      "documento": "edital",
+      "pagina": 2,
+      "texto": "Estudante obrigado a sair da própria residência em virtude da ocorrência de alagação, incêndio ou outro evento adverso;"
+    },
+    {
+      "chave": "2.2.1",
+      "rotulo": "Item 2.2.1",
+      "documento": "edital",
+      "pagina": 2,
+      "texto": "Excepcionalmente, outras situações de vulnerabilidade extrema geradas por situações inesperadas, não descritas nos subitens anteriores, poderão ser analisadas pela Comissão de Seleção da Proaes."
+    },
+    {
+      "chave": "2.2.2",
+      "rotulo": "Item 2.2.2",
+      "documento": "edital",
+      "pagina": 2,
+      "texto": "A situação será considerada emergência se o fator motivador da incapacidade temporária no suprimento das necessidades básica tiver ocorrido em no máximo 90 dias anteriores à solicitação do presente auxílio.",
+      "observacao": "O resultado final da 11ª chamada, de 08/10/2026, repete a regra: o auxílio pode ser solicitado em até 90 dias da ocorrência do evento adverso."
+    },
+    {
+      "chave": "5.3",
+      "rotulo": "Item 5.3",
+      "documento": "edital",
+      "pagina": 3,
+      "texto": "Este edital será de fluxo contínuo e terá vigência até 31 de dezembro de 2026 e/ou até a utilização de todo o recurso orçamentário previsto;",
+      "observacao": "Vigência do edital não confirma que as inscrições estejam abertas hoje."
+    },
+    {
+      "chave": "6.8",
+      "rotulo": "Item 6.8",
+      "documento": "edital",
+      "pagina": 3,
+      "texto": "Caso o estudante não possa anexar algum dos documentos exigidos no Item 08 deste Edital, em virtude de perda, roubo, ou extravio, anexar Boletim de Ocorrência com prazo não superior à 06 (seis) meses da data do ocorrido;"
+    },
+    {
+      "chave": "6.9",
+      "rotulo": "Item 6.9",
+      "documento": "edital",
+      "pagina": 3,
+      "texto": "Caso o estudante esteja na situação prevista na alínea (b) do item 2.2, por perda dos documentos pessoais, poderá incluir no sistema de Bolsas e Auxílios os documentos que possui, o Anexo VI (Justificativa de Auxílio Emergencial) juntamente com os comprovantes da situação emergencial e o Anexo VII (Autodeclaração de Vulnerabilidade Socioeconômica);"
+    },
+    {
+      "chave": "6.10",
+      "rotulo": "Item 6.10",
+      "documento": "edital",
+      "pagina": 3,
+      "texto": "Caso o estudante tenha sido beneficiário(a) das bolsas ou auxílios da Assistência Estudantil/Pnaes da Ufac nos últimos 3 anos e ainda possuir renda inferior a 1 salário-mínimo, poderá aproveitar a documentação através do Anexo VII (Autodeclaração de Vulnerabilidade Socioeconômica), substituindo a documentação de renda solicitada no Item 8 do Edital;"
+    },
+    {
+      "chave": "8.3",
+      "rotulo": "Item 8.3",
+      "documento": "edital",
+      "pagina": 4,
+      "texto": "Documentação comprobatória da situação emergencial: a) Justificativa do Auxílio Emergencial (Anexo VI) com a documentação comprobatória, nos casos de Falecimento: Certidão de óbito e comprovante que não vai receber pensão; Alagação ou incêndio: boletim de ocorrência, comprovante emitido por órgãos estaduais e/ou municipais, foto da residência nessa situação, etc; Estudantes oriundos de outras localidades: fatura de energia da residência de origem e outros documentos que sejam relevantes;",
+      "observacao": "A enumeração termina em \"etc\"; é exemplificativa, não uma lista fechada."
+    },
+    {
+      "chave": "8.4",
+      "rotulo": "Item 8.4",
+      "documento": "edital",
+      "pagina": 4,
+      "texto": "Comprovantes de Moradia (do estudante e de todos os membros do grupo familiar): a) Imóvel próprio: Cópia da fatura de energia atualizada do imóvel onde reside (Caso todos os membros do grupo familiar residam na mesma casa, apresentar somente uma cópia da fatura de energia). Não serão aceitas cópias cortadas, ilegíveis, incompletas, sem identificação de titular e/ou endereço. b) Imóvel cedido: Cópia da fatura de energia atualizada do imóvel onde reside (Caso todos os membros do grupo familiar residam na mesma casa, apresentar somente uma cópia da fatura de energia) e Declaração de cessão do imóvel. Não serão aceitas cópias cortadas, ilegíveis, incompletas, sem identificação de titular e/ou endereço. c) Imóvel alugado: Cópia da fatura de energia atualizada do imóvel onde reside (Caso todos os membros do grupo familiar residam na mesma casa, apresentar somente uma cópia da fatura de energia) e Contrato de aluguel. Não serão aceitas cópias cortadas, ilegíveis, incompletas, sem identificação de titular e/ou endereço."
+    },
+    {
+      "chave": "anexo-vi.cabecalho",
+      "rotulo": "Anexo VI, cabeçalho",
+      "documento": "anexos",
+      "pagina": 6,
+      "texto": "JUSTIFICATIVA DO AUXÍLIO EMERGENCIAL 2025 - Edital 02/2025",
+      "observacao": "O cabeçalho cita 2025 e o Edital 02/2025, enquanto a linha de data do mesmo formulário traz 2026. Não está claro qual versão usar."
+    },
+    {
+      "chave": "anexo-vi.alagacao",
+      "rotulo": "Anexo VI, documentos comprobatórios",
+      "documento": "anexos",
+      "pagina": 6,
+      "texto": "Alagação ou incêndio: boletim de ocorrência, comprovante emitido pelos órgãos estaduais e/ou municipais, fotos da residência nessa situação, entre outros;"
+    },
+    {
+      "chave": "anexo-vii.opcao",
+      "rotulo": "Anexo VII, opção de declaração",
+      "documento": "anexos",
+      "pagina": 7,
+      "texto": "contemplado com bolsas ou auxílios da Assistência Estudantil/Pnaes da Ufac nos últimos 3 anos e ainda possuo renda inferior a 1 salário-mínimo;",
+      "observacao": "É a única opção marcável do formulário e descreve quem já recebeu benefício. O item 6.9 indica o Anexo VII também para a situação da alínea (b), que pode não corresponder a essa opção."
+    }
+  ],
+  "campos": [
+    {
+      "chave": "aconteceu_com_voce",
+      "pergunta": "A situação relatada aconteceu com você?",
+      "rotulo": "Aconteceu com você",
+      "opcoes": {
+        "sim": "Sim",
+        "outra_pessoa": "Não, aconteceu com outra pessoa",
+        "nao_sei": "Não sei"
+      }
+    },
+    {
+      "chave": "acontecimento",
+      "pergunta": "Qual acontecimento você quer analisar?",
+      "rotulo": "Acontecimento",
+      "opcoes": {
+        "alagacao": "Alagação",
+        "incendio": "Incêndio",
+        "outro": "Outro evento",
+        "nao_sei": "Não sei"
+      }
+    },
+    {
+      "chave": "descricao_acontecimento",
+      "pergunta": "Descreva o acontecimento em poucas palavras",
+      "rotulo": "Descrição do acontecimento",
+      "tipo": "texto"
+    },
+    {
+      "chave": "saiu_da_residencia",
+      "pergunta": "Você precisou sair da sua própria residência por causa desse acontecimento?",
+      "rotulo": "Saída da própria residência",
+      "opcoes": {
+        "sim": "Sim",
+        "nao": "Não",
+        "nao_sei": "Não sei"
+      }
+    },
+    {
+      "chave": "data_evento",
+      "pergunta": "Data do acontecimento",
+      "rotulo": "Data do acontecimento",
+      "tipo": "data"
+    },
+    {
+      "chave": "data_referencia",
+      "pergunta": "Data de referência para esta consulta",
+      "rotulo": "Data de referência",
+      "tipo": "data",
+      "extraivel": false,
+      "padrao": "hoje",
+      "nota_padrao": "Preenchida com a data de hoje. Confira se é a data em que pretende solicitar o auxílio."
+    },
+    {
+      "chave": "perdeu_documentos",
+      "pergunta": "Você perdeu documentos pessoais?",
+      "rotulo": "Perda de documentos pessoais",
+      "opcoes": {
+        "sim": "Sim",
+        "nao": "Não",
+        "nao_sei": "Não sei"
+      }
+    },
+    {
+      "chave": "dificuldade_moradia",
+      "pergunta": "Você tem dificuldade para apresentar comprovante de moradia ou contrato?",
+      "rotulo": "Dificuldade com comprovante de moradia",
+      "opcoes": {
+        "sim": "Sim",
+        "nao": "Não",
+        "nao_sei": "Não sei",
+        "nao_quero_informar": "Não quero informar"
+      }
+    },
+    {
+      "chave": "beneficio_anterior",
+      "pergunta": "Você recebeu bolsa ou auxílio da assistência estudantil da Ufac nos últimos 3 anos?",
+      "rotulo": "Benefício anterior mencionado",
+      "opcoes": {
+        "sim": "Sim",
+        "nao": "Não",
+        "nao_sei": "Não sei"
+      },
+      "so_do_relato": true
+    }
+  ],
+  "ramos": [
+    {
+      "chave": "2.2.b+6.9",
+      "descricao": "Estudante obrigado a sair da própria residência por alagação, incêndio ou outro evento adverso e que perdeu documentos pessoais (itens 2.2, alínea b, 2.2.2 e 6.9).",
+      "requisitos": [
+        {
+          "campo": "aconteceu_com_voce",
+          "atende": [
+            "sim"
+          ],
+          "contraria": {
+            "outra_pessoa": "Você informou que a situação aconteceu com outra pessoa."
+          }
+        },
+        {
+          "campo": "saiu_da_residencia",
+          "atende": [
+            "sim"
+          ],
+          "contraria": {
+            "nao": "Você informou que não precisou sair da própria residência."
+          }
+        },
+        {
+          "campo": "perdeu_documentos",
+          "atende": [
+            "sim"
+          ],
+          "contraria": {
+            "nao": "Você informou que não perdeu documentos pessoais."
+          }
+        },
+        {
+          "campo": "acontecimento",
+          "atende": [
+            "alagacao",
+            "incendio"
+          ],
+          "a_esclarecer": [
+            "outro"
+          ]
+        }
+      ],
+      "prazo": {
+        "inicio": "data_evento",
+        "fim": "data_referencia",
+        "dias": 90,
+        "frase_fora": "Pelas datas informadas, o acontecimento ocorreu {dias} dias antes da data de referência, mais que os {limite} dias do item 2.2.2."
+      },
+      "textos": {
+        "sem_relacao": "Não relacionado às informações atuais.",
+        "faltando": "Para relacionar este item à sua situação, falta informar ou confirmar: {campos}.",
+        "a_esclarecer": "Depende de a Proaes esclarecer se o acontecimento se enquadra no item 2.2, alínea b."
+      }
+    }
+  ],
+  "orientacoes": [
+    {
+      "chave": "esclarecer.aconteceu_com_voce",
+      "tipo": "esclarecer",
+      "quando": {
+        "todos": [
+          {
+            "campo": "aconteceu_com_voce",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Informe se a situação aconteceu com você",
+      "instrucao": "Responda se o acontecimento afetou você diretamente. Fatos sobre outra pessoa não são usados para relacionar o edital à sua situação.{nota:aconteceu_com_voce}",
+      "motivo": "O item 2.2, alínea b, trata do próprio estudante.",
+      "fontes": [
+        "2.2.b"
+      ],
+      "depende_de": [
+        "aconteceu_com_voce"
+      ]
+    },
+    {
+      "chave": "esclarecer.acontecimento",
+      "tipo": "esclarecer",
+      "quando": {
+        "todos": [
+          {
+            "campo": "acontecimento",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Informe qual acontecimento você quer analisar",
+      "instrucao": "Escolha um acontecimento por vez: alagação, incêndio ou outro evento.{nota:acontecimento}",
+      "motivo": "O item 2.2, alínea b, menciona alagação, incêndio ou outro evento adverso.",
+      "fontes": [
+        "2.2.b"
+      ],
+      "depende_de": [
+        "acontecimento"
+      ]
+    },
+    {
+      "chave": "esclarecer.saiu_da_residencia",
+      "tipo": "esclarecer",
+      "quando": {
+        "todos": [
+          {
+            "campo": "saiu_da_residencia",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Informe se precisou sair da sua própria residência",
+      "instrucao": "Responda se você precisou deixar a sua própria residência por causa desse acontecimento. Uma alagação no bairro ou na cidade, por si, não significa que você precisou sair.{nota:saiu_da_residencia}",
+      "motivo": "O item 2.2, alínea b, trata do estudante obrigado a sair da própria residência.",
+      "fontes": [
+        "2.2.b"
+      ],
+      "depende_de": [
+        "saiu_da_residencia"
+      ]
+    },
+    {
+      "chave": "esclarecer.perdeu_documentos",
+      "tipo": "esclarecer",
+      "quando": {
+        "todos": [
+          {
+            "campo": "perdeu_documentos",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Informe se perdeu documentos pessoais",
+      "instrucao": "Responda se você perdeu documentos pessoais.{nota:perdeu_documentos}",
+      "motivo": "O item 6.9 trata de quem está na situação da alínea b do item 2.2 e perdeu documentos pessoais.",
+      "fontes": [
+        "6.9"
+      ],
+      "depende_de": [
+        "perdeu_documentos"
+      ]
+    },
+    {
+      "chave": "esclarecer.datas",
+      "tipo": "esclarecer",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "prazo": "2.2.b+6.9",
+            "estado": "data_posterior"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Confira as datas informadas",
+      "instrucao": "A data do acontecimento informada é posterior à data de referência. Corrija uma das datas.",
+      "motivo": "O item 2.2.2 considera acontecimentos ocorridos em até 90 dias antes da solicitação do auxílio.",
+      "fontes": [
+        "2.2.2"
+      ],
+      "depende_de": [
+        "data_evento",
+        "data_referencia"
+      ]
+    },
+    {
+      "chave": "2.2.2.prazo",
+      "tipo": "passo",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "prazo": "2.2.b+6.9",
+            "estado": "dentro"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Observe o prazo de {prazo:limite} dias do item 2.2.2",
+      "instrucao": "Pelas datas informadas, o acontecimento ocorreu {prazo:dias} dias antes da data de referência. Contando {prazo:limite} dias a partir do acontecimento, o prazo vai até {prazo:data_final}.",
+      "motivo": "O item 2.2.2 considera acontecimentos ocorridos em até 90 dias antes da solicitação do auxílio.",
+      "fontes": [
+        "2.2.2"
+      ],
+      "depende_de": [
+        "data_evento",
+        "data_referencia"
+      ],
+      "pendencia": "Isso confere apenas a condição de prazo deste recorte, não o direito ao auxílio."
+    },
+    {
+      "chave": "esclarecer.data_evento",
+      "tipo": "esclarecer",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "prazo": "2.2.b+6.9",
+            "estado": "desconhecido"
+          },
+          {
+            "campo": "data_evento",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Informe a data do acontecimento",
+      "instrucao": "Falta informar a data para conferir a condição de {prazo:limite} dias do item 2.2.2.{nota:data_evento}",
+      "motivo": "O item 2.2.2 considera acontecimentos ocorridos em até 90 dias antes da solicitação do auxílio.",
+      "fontes": [
+        "2.2.2"
+      ],
+      "depende_de": [
+        "data_evento"
+      ]
+    },
+    {
+      "chave": "esclarecer.data_referencia",
+      "tipo": "esclarecer",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "prazo": "2.2.b+6.9",
+            "estado": "desconhecido"
+          },
+          {
+            "campo": "data_referencia",
+            "desconhecido": true
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Confirme a data de referência",
+      "instrucao": "A data de referência é o dia em que você pretende solicitar o auxílio. Confirme ou corrija essa data.",
+      "motivo": "O item 2.2.2 considera acontecimentos ocorridos em até 90 dias antes da solicitação do auxílio.",
+      "fontes": [
+        "2.2.2"
+      ],
+      "depende_de": [
+        "data_referencia"
+      ]
+    },
+    {
+      "chave": "6.9.documentos-disponiveis",
+      "tipo": "passo",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "personalizavel"
+      },
+      "titulo": "Separe os documentos pessoais que você ainda possui",
+      "instrucao": "O item 6.9 permite incluir no sistema de Bolsas e Auxílios os documentos que você possui.",
+      "motivo": "Você informou que precisou sair da própria residência por causa de {valor_min:acontecimento} e que perdeu documentos pessoais.",
+      "fontes": [
+        "6.9"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ],
+      "pendencia": "Isso organiza a preparação. Não garante que a documentação esteja completa para a inscrição."
+    },
+    {
+      "chave": "6.9.anexo-vi",
+      "tipo": "passo",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "personalizavel"
+      },
+      "titulo": "Consulte a Justificativa do Auxílio Emergencial (Anexo VI)",
+      "instrucao": "O item 6.9 menciona o Anexo VI. O formulário está na página 6 do pacote de anexos e inclui a opção de estudante obrigado a sair da própria residência.",
+      "motivo": "Você informou que precisou sair da própria residência por causa de {valor_min:acontecimento} e que perdeu documentos pessoais.",
+      "fontes": [
+        "6.9",
+        "anexo-vi.cabecalho"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ],
+      "pendencia": "O cabeçalho do Anexo VI cita 2025 e o Edital 02/2025. Veja a pergunta sugerida para a Proaes."
+    },
+    {
+      "chave": "6.9.comprovantes",
+      "tipo": "passo",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "personalizavel"
+      },
+      "titulo": "Reúna comprovantes da situação emergencial",
+      "instrucao": "O item 8.3 cita como exemplos, para alagação ou incêndio: boletim de ocorrência, comprovante emitido por órgãos estaduais e/ou municipais e foto da residência nessa situação.",
+      "motivo": "Você informou que precisou sair da própria residência por causa de {valor_min:acontecimento} e que perdeu documentos pessoais.",
+      "fontes": [
+        "6.9",
+        "8.3",
+        "anexo-vi.alagacao"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ],
+      "pendencia": "A lista do edital termina em “etc” e é exemplificativa. A Ponte não avalia se um comprovante será aceito."
+    },
+    {
+      "chave": "6.9.anexo-vii",
+      "tipo": "passo",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "personalizavel"
+      },
+      "titulo": "Consulte a Autodeclaração de Vulnerabilidade Socioeconômica (Anexo VII)",
+      "instrucao": "O item 6.9 menciona o Anexo VII. O formulário está na página 7 do pacote de anexos.",
+      "motivo": "Você informou que precisou sair da própria residência por causa de {valor_min:acontecimento} e que perdeu documentos pessoais.",
+      "fontes": [
+        "6.9",
+        "anexo-vii.opcao"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ],
+      "pendencia": "A única opção do formulário descreve quem recebeu bolsas ou auxílios nos últimos 3 anos. Veja a pergunta sugerida para a Proaes."
+    },
+    {
+      "chave": "proaes.versao-anexo-vi",
+      "tipo": "pergunta_proaes",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "personalizavel"
+      },
+      "titulo": "Pergunte qual versão do Anexo VI usar",
+      "instrucao": "Pergunta sugerida: “O Anexo VI publicado na página do Edital 01/2026 tem no cabeçalho ‘Justificativa do Auxílio Emergencial 2025 - Edital 02/2025’. Devo usar esse formulário?”",
+      "motivo": "O cabeçalho cita outro ano e outro edital. A Ponte não conclui que o formulário seja inválido.",
+      "fontes": [
+        "anexo-vi.cabecalho",
+        "6.9"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ]
+    },
+    {
+      "chave": "proaes.opcao-anexo-vii",
+      "tipo": "pergunta_proaes",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "ramo": "2.2.b+6.9",
+            "estado": "personalizavel"
+          },
+          {
+            "campo": "beneficio_anterior",
+            "diferente": "sim"
+          }
+        ]
+      },
+      "titulo": "Pergunte como preencher o Anexo VII na sua situação",
+      "instrucao": "Pergunta sugerida: “O item 6.9 indica o Anexo VII para quem saiu da própria residência e perdeu documentos pessoais. A única opção do formulário é para quem foi contemplado com bolsas ou auxílios nos últimos 3 anos. Como devo proceder se essa opção não corresponder à minha situação?”",
+      "motivo": "A Ponte não orienta a marcar uma opção que talvez não corresponda à sua situação.",
+      "fontes": [
+        "6.9",
+        "anexo-vii.opcao"
+      ],
+      "depende_de": [
+        "ramo:campos",
+        "beneficio_anterior"
+      ]
+    },
+    {
+      "chave": "6.9.geral",
+      "tipo": "referencia",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "ramo": "2.2.b+6.9",
+        "estado": "nao_personalizavel"
+      },
+      "titulo": "O que o item 6.9 prevê",
+      "instrucao": "Para o estudante na situação da alínea b do item 2.2, por perda dos documentos pessoais, o item 6.9 prevê incluir no sistema os documentos que possui, o Anexo VI com os comprovantes da situação emergencial e o Anexo VII.",
+      "motivo": "{ramo:motivo_geral}",
+      "fontes": [
+        "6.9",
+        "2.2.b"
+      ],
+      "depende_de": [
+        "ramo:campos"
+      ]
+    },
+    {
+      "chave": "proaes.enquadramento",
+      "tipo": "pergunta_proaes",
+      "quando": {
+        "todos": [
+          {
+            "campo": "acontecimento",
+            "igual": "outro"
+          },
+          {
+            "campo": "saiu_da_residencia",
+            "diferente": "nao"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Pergunte se o acontecimento se enquadra no item 2.2, alínea b",
+      "instrucao": "Pergunta sugerida: “O acontecimento que vivi ({texto:descricao_acontecimento|outro evento}) se enquadra como ‘outro evento adverso’ do item 2.2, alínea b?”",
+      "motivo": "O item menciona alagação, incêndio ou outro evento adverso. A Ponte não decide se um acontecimento diferente se enquadra.",
+      "fontes": [
+        "2.2.b"
+      ],
+      "depende_de": [
+        "acontecimento",
+        "descricao_acontecimento",
+        "saiu_da_residencia"
+      ]
+    },
+    {
+      "chave": "proaes.moradia",
+      "tipo": "pergunta_proaes",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "campo": "dificuldade_moradia",
+            "igual": "sim"
+          },
+          {
+            "ramo": "2.2.b+6.9",
+            "estado": "personalizavel"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Pergunte como apresentar o comprovante de moradia",
+      "instrucao": "Pergunta sugerida: “Considerando a situação descrita no item 6.9, como devo apresentar a documentação de moradia mencionada no item 8.4?”",
+      "motivo": "Você informou dificuldade com comprovante de moradia ou contrato. O edital não esclarece como os itens 6.9 e 8.4 se relacionam; a Ponte não presume dispensa nem exigência adicional.",
+      "fontes": [
+        "6.9",
+        "8.4"
+      ],
+      "depende_de": [
+        "ramo:campos",
+        "dificuldade_moradia"
+      ]
+    },
+    {
+      "chave": "proaes.moradia",
+      "tipo": "pergunta_proaes",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "campo": "dificuldade_moradia",
+            "igual": "sim"
+          },
+          {
+            "ramo": "2.2.b+6.9",
+            "estado": "nao_personalizavel"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "diferente": "outra_pessoa"
+          }
+        ]
+      },
+      "titulo": "Pergunte como apresentar o comprovante de moradia",
+      "instrucao": "Pergunta sugerida: “Tenho dificuldade para apresentar o comprovante de moradia do item 8.4. Como devo proceder?”",
+      "motivo": "Você informou dificuldade com comprovante de moradia ou contrato.",
+      "fontes": [
+        "8.4"
+      ],
+      "depende_de": [
+        "dificuldade_moradia"
+      ]
+    },
+    {
+      "chave": "6.8",
+      "tipo": "passo",
+      "quando": {
+        "todos": [
+          {
+            "campo": "perdeu_documentos",
+            "igual": "sim"
+          },
+          {
+            "campo": "aconteceu_com_voce",
+            "igual": "sim"
+          }
+        ]
+      },
+      "titulo": "Consulte também o item 6.8",
+      "instrucao": "O item 6.8 trata de documentos exigidos no item 8 que não possam ser anexados por perda, roubo ou extravio e menciona Boletim de Ocorrência com prazo não superior a 6 meses da data do ocorrido.",
+      "motivo": "Você informou que perdeu documentos pessoais.",
+      "fontes": [
+        "6.8"
+      ],
+      "depende_de": [
+        "perdeu_documentos",
+        "aconteceu_com_voce"
+      ],
+      "pendencia": "A Ponte não avaliou se o item 6.8 se aplica ao seu caso nem se ele substitui algum documento."
+    },
+    {
+      "chave": "6.8",
+      "tipo": "referencia",
+      "quando": {
+        "nao": {
+          "todos": [
+            {
+              "campo": "perdeu_documentos",
+              "igual": "sim"
+            },
+            {
+              "campo": "aconteceu_com_voce",
+              "igual": "sim"
+            }
+          ]
+        }
+      },
+      "titulo": "Item 6.8: perda, roubo ou extravio de documentos",
+      "instrucao": "O item 6.8 trata de documentos exigidos no item 8 que não possam ser anexados por perda, roubo ou extravio e menciona Boletim de Ocorrência com prazo não superior a 6 meses da data do ocorrido.",
+      "motivo": "Informação geral do edital, mostrada independentemente das suas respostas.",
+      "fontes": [
+        "6.8"
+      ],
+      "depende_de": []
+    },
+    {
+      "chave": "fora-do-recorte",
+      "tipo": "nao_avaliado",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "ramo": "2.2.b+6.9",
+            "estado": "com_contrarios"
+          },
+          {
+            "prazo": "2.2.b+6.9",
+            "estado": "fora"
+          }
+        ]
+      },
+      "titulo": "Este recorte não cobre essa combinação de informações",
+      "instrucao": "O recorte trata de estudante que precisou sair da própria residência por alagação, incêndio ou outro evento adverso e perdeu documentos pessoais. {ramo:contrarios}",
+      "motivo": "Isso não significa ausência de direito ou de outra alternativa. O item 2.2.1 prevê que outras situações excepcionais podem ser analisadas pela Comissão de Seleção da Proaes.",
+      "fontes": [
+        "2.2.1",
+        "2.2.2"
+      ],
+      "depende_de": [
+        "ramo:contrarios"
+      ]
+    },
+    {
+      "chave": "fora-do-recorte",
+      "tipo": "nao_avaliado",
+      "ramo": "2.2.b+6.9",
+      "quando": {
+        "todos": [
+          {
+            "ramo": "2.2.b+6.9",
+            "estado": "com_contrarios"
+          },
+          {
+            "nao": {
+              "prazo": "2.2.b+6.9",
+              "estado": "fora"
+            }
+          }
+        ]
+      },
+      "titulo": "Este recorte não cobre essa combinação de informações",
+      "instrucao": "O recorte trata de estudante que precisou sair da própria residência por alagação, incêndio ou outro evento adverso e perdeu documentos pessoais. {ramo:contrarios}",
+      "motivo": "Isso não significa ausência de direito ou de outra alternativa. O item 2.2.1 prevê que outras situações excepcionais podem ser analisadas pela Comissão de Seleção da Proaes.",
+      "fontes": [
+        "2.2.1"
+      ],
+      "depende_de": [
+        "ramo:contrarios"
+      ]
+    },
+    {
+      "chave": "6.10",
+      "tipo": "nao_avaliado",
+      "quando": {
+        "campo": "beneficio_anterior",
+        "igual": "sim"
+      },
+      "titulo": "Item 6.10: benefício nos últimos 3 anos",
+      "instrucao": "O item 6.10 prevê que quem foi beneficiário de bolsas ou auxílios da Assistência Estudantil da Ufac nos últimos 3 anos e ainda tem renda inferior a 1 salário-mínimo pode usar o Anexo VII no lugar da documentação de renda do item 8.",
+      "motivo": "Você mencionou ter recebido benefício da assistência estudantil. Essa alternativa não foi avaliada pela Ponte.",
+      "fontes": [
+        "6.10"
+      ],
+      "depende_de": [
+        "beneficio_anterior"
+      ]
+    },
+    {
+      "chave": "6.10",
+      "tipo": "nao_avaliado",
+      "quando": {
+        "campo": "beneficio_anterior",
+        "diferente": "sim"
+      },
+      "titulo": "Item 6.10: alternativa não avaliada",
+      "instrucao": "O item 6.10 prevê que quem foi beneficiário de bolsas ou auxílios da Assistência Estudantil da Ufac nos últimos 3 anos e ainda tem renda inferior a 1 salário-mínimo pode usar o Anexo VII no lugar da documentação de renda do item 8.",
+      "motivo": "A Ponte não avaliou essa alternativa.",
+      "fontes": [
+        "6.10"
+      ],
+      "depende_de": []
+    }
+  ]
+}

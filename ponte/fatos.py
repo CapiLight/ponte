@@ -5,6 +5,8 @@ acontecimento: apenas registra a declaração atual. Só fatos confirmados ou
 informados diretamente alimentam as regras; sugestões ainda não conferidas,
 "não sei" e conflitos contam como desconhecidos.
 
+Os campos de um caso vêm da ficha do edital escolhido (ponte/ficha.py).
+
 Cada mudança no caso incrementa a revisão. Uma extração do relato só pode ser
 aplicada se o caso continuar na revisão em que ela foi pedida e se o relato não
 tiver mudado (ver resultado_ainda_vale).
@@ -16,8 +18,8 @@ from datetime import date
 from enum import StrEnum
 
 NAO_SEI = "nao_sei"
-
-SIM_NAO = {"sim": "Sim", "nao": "Não", NAO_SEI: "Não sei"}
+TIPOS_DE_CAMPO = ("escolha", "data", "texto")
+PADRAO_DATA_DE_HOJE = "hoje"
 
 
 class Estado(StrEnum):
@@ -45,69 +47,9 @@ class Campo:
     opcoes: dict[str, str] | None = None
     extraivel: bool = True
     so_do_relato: bool = False
+    padrao: str | None = None
+    nota_padrao: str = ""
 
-
-CAMPOS: dict[str, Campo] = {
-    campo.chave: campo
-    for campo in (
-        Campo(
-            chave="aconteceu_com_voce",
-            pergunta="A situação relatada aconteceu com você?",
-            rotulo="Aconteceu com você",
-            opcoes={"sim": "Sim", "outra_pessoa": "Não, aconteceu com outra pessoa", NAO_SEI: "Não sei"},
-        ),
-        Campo(
-            chave="acontecimento",
-            pergunta="Qual acontecimento você quer analisar?",
-            rotulo="Acontecimento",
-            opcoes={"alagacao": "Alagação", "incendio": "Incêndio", "outro": "Outro evento", NAO_SEI: "Não sei"},
-        ),
-        Campo(
-            chave="descricao_acontecimento",
-            pergunta="Descreva o acontecimento em poucas palavras",
-            rotulo="Descrição do acontecimento",
-            tipo="texto",
-        ),
-        Campo(
-            chave="saiu_da_residencia",
-            pergunta="Você precisou sair da sua própria residência por causa desse acontecimento?",
-            rotulo="Saída da própria residência",
-            opcoes=SIM_NAO,
-        ),
-        Campo(
-            chave="data_evento",
-            pergunta="Data do acontecimento",
-            rotulo="Data do acontecimento",
-            tipo="data",
-        ),
-        Campo(
-            chave="data_referencia",
-            pergunta="Data de referência para esta consulta",
-            rotulo="Data de referência",
-            tipo="data",
-            extraivel=False,
-        ),
-        Campo(
-            chave="perdeu_documentos",
-            pergunta="Você perdeu documentos pessoais?",
-            rotulo="Perda de documentos pessoais",
-            opcoes=SIM_NAO,
-        ),
-        Campo(
-            chave="dificuldade_moradia",
-            pergunta="Você tem dificuldade para apresentar comprovante de moradia ou contrato?",
-            rotulo="Dificuldade com comprovante de moradia",
-            opcoes={**SIM_NAO, "nao_quero_informar": "Não quero informar"},
-        ),
-        Campo(
-            chave="beneficio_anterior",
-            pergunta="Você recebeu bolsa ou auxílio da assistência estudantil da Ufac nos últimos 3 anos?",
-            rotulo="Benefício anterior mencionado",
-            opcoes=SIM_NAO,
-            so_do_relato=True,
-        ),
-    )
-}
 
 ESTADOS_DECLARADOS = (Estado.CONFIRMADO, Estado.INFORMADO)
 ESTADOS_DE_SUGESTAO = (Estado.A_CONFERIR, Estado.PRECISA_ESCLARECER)
@@ -126,16 +68,15 @@ class Fato:
         return self.estado in ESTADOS_DECLARADOS and self.valor not in (None, NAO_SEI)
 
 
-def descrever_valor(chave: str, fato: Fato) -> str:
+def descrever_valor(campo: Campo, fato: Fato) -> str:
     if fato.valor is None:
         return "Sem resposta"
     if fato.valor == NAO_SEI:
         return "Não sei"
     if isinstance(fato.valor, date):
         return fato.valor.strftime("%d/%m/%Y")
-    opcoes = CAMPOS[chave].opcoes
-    if opcoes:
-        return opcoes.get(fato.valor, str(fato.valor))
+    if campo.opcoes:
+        return campo.opcoes.get(fato.valor, str(fato.valor))
     return str(fato.valor)
 
 
@@ -145,25 +86,28 @@ def versao_do_relato(relato: str) -> str:
 
 @dataclass(frozen=True)
 class Caso:
+    campos: dict[str, Campo]
     fatos: dict[str, Fato]
     revisao: int = 0
     versao_relato: str = ""
 
     @classmethod
-    def novo(cls, data_referencia: date) -> "Caso":
-        fatos = {chave: Fato() for chave in CAMPOS}
-        fatos["data_referencia"] = Fato(
-            valor=data_referencia,
-            estado=Estado.A_CONFERIR,
-            origem=Origem.SISTEMA,
-            nota="Preenchida com a data de hoje. Confira se é a data em que pretende solicitar o auxílio.",
-        )
-        return cls(fatos)
+    def novo(cls, campos: dict[str, Campo], hoje: date) -> "Caso":
+        fatos = {}
+        for chave, campo in campos.items():
+            if campo.padrao == PADRAO_DATA_DE_HOJE:
+                fatos[chave] = Fato(valor=hoje, estado=Estado.A_CONFERIR, origem=Origem.SISTEMA, nota=campo.nota_padrao)
+            else:
+                fatos[chave] = Fato()
+        return cls(campos, fatos)
 
     def valor(self, chave: str) -> object | None:
         """Valor declarado do fato, ou None quando ele ainda é desconhecido."""
         fato = self.fatos[chave]
         return fato.valor if fato.conhecido else None
+
+    def descrever(self, chave: str) -> str:
+        return descrever_valor(self.campos[chave], self.fatos[chave])
 
     def informar(self, chave: str, valor: object) -> "Caso":
         estado = Estado.NAO_SEI if valor == NAO_SEI else Estado.INFORMADO
@@ -185,7 +129,7 @@ class Caso:
             chave: Fato() if fato.origem is Origem.RELATO else fato
             for chave, fato in self.fatos.items()
         }
-        return Caso(fatos, self.revisao + 1, "")
+        return replace(self, fatos=fatos, revisao=self.revisao + 1, versao_relato="")
 
     def aplicar_sugestoes(self, sugestoes: dict[str, Fato], versao_relato: str) -> "Caso":
         """Substitui os fatos do relato anterior pelas sugestões da nova análise.
@@ -197,17 +141,17 @@ class Caso:
         sem_relato_anterior = self.descartar_relato()
         fatos = dict(sem_relato_anterior.fatos)
         for chave, sugestao in sugestoes.items():
-            if not CAMPOS[chave].extraivel:
+            if chave not in self.campos or not self.campos[chave].extraivel:
                 raise ValueError(f"{chave} não pode ser sugerido pelo relato")
             if sugestao.origem is not Origem.RELATO or sugestao.estado not in ESTADOS_DE_SUGESTAO:
                 raise ValueError(f"sugestão inválida para {chave}")
             fatos[chave] = sugestao
-        return Caso(fatos, sem_relato_anterior.revisao + 1, versao_relato)
+        return replace(sem_relato_anterior, fatos=fatos, revisao=sem_relato_anterior.revisao + 1, versao_relato=versao_relato)
 
     def _com_fato(self, chave: str, fato: Fato) -> "Caso":
-        if chave not in CAMPOS:
+        if chave not in self.campos:
             raise KeyError(chave)
-        return Caso({**self.fatos, chave: fato}, self.revisao + 1, self.versao_relato)
+        return replace(self, fatos={**self.fatos, chave: fato}, revisao=self.revisao + 1)
 
 
 def resultado_ainda_vale(caso: Caso, revisao_no_pedido: int, relato_no_pedido: str, relato_atual: str) -> bool:
