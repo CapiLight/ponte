@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+html,body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f6f7f6;color:#1c2421;line-height:1.55;-webkit-font-smoothing:antialiased}
+main p{max-width:68ch}
+h1,h2,h3,h4{text-wrap:balance}
+:focus-visible{outline:3px solid #1f5b47;outline-offset:2px}

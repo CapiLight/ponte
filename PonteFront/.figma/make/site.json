@@ -1,0 +1,10 @@
+{
+  "description": "Ajuda estudantes da UFAC a organizar documentos para o auxílio emergencial, revisar informações e consultar orientações e fontes oficiais.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
