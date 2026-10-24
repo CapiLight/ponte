@@ -1,4 +1,16 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import BuscaEditais, { Selo as SeloEdital } from './BuscaEditais'
+import Sobre, { ApagarDados } from './Sobre'
+import PrepararEdital, { ETAPAS_PREPARO } from './PrepararEdital'
+import { useSalvo } from './persistencia'
+import { hashRota, useRota } from './rota'
+import { EDITAIS, EDITAL_GUIADO, HOJE, HOJE_ORIGEM, INST, fmt, fmtCurto, nomeEdital } from './editais'
+import { PREPARO_VAZIO, type Preparo } from './preparo'
+
+const GUIADO = EDITAL_GUIADO.id
+/* Controles de demonstração (ex.: simular falha) só em desenvolvimento ou com ?demo no endereço. */
+const DEMO = import.meta.env.DEV || new URLSearchParams(location.search).has('demo')
+const ETAPAS_GUIADO = ['Contexto do edital', 'Minha situação', 'Conferir informações', 'Próximos passos e resumo']
 
 /* Contrato conceitual (anotação técnica):
    caso = { modo, relato:{texto, versao}, fatos:{[id]:{valor, origem, trecho, estado, versao}}, ultimaMudanca }
@@ -6,9 +18,9 @@ import { useMemo, useRef, useState } from 'react'
    Resposta de análise com versao != relato.versao atual é descartada (não sobrescreve edição).
    Orientações e resumo são funções puras do estado atual dos fatos. Streamlit: st.session_state["caso"]. */
 
-const URL_PAG = 'https://www3.ufac.br/proaes/2026/edital-ndeg-01-2026-proaes-selecao-do-programa-de-auxilio-emergencial-e-01-26'
-const URL_ED = URL_PAG + '/sei_1956124_edital_01.pdf'
-const URL_AN = URL_PAG + '/anexos-auxilio-emergencial-2026.pdf'
+/* Dados do edital guiado vêm do catálogo (fonte única). */
+const ED = EDITAL_GUIADO, FONTES = ED.fontes!, NOME_ED = nomeEdital(ED), INST_ED = INST[ED.inst]
+const URL_PAG = FONTES.pagina, URL_ED = FONTES.edital, URL_AN = FONTES.anexos!
 const EXEMPLO = 'No dia 10 de outubro de 2026, minha casa foi alagada. Precisei sair da minha residência e perdi meus documentos pessoais.'
 const EXEMPLO_DOIS = 'Em 2023 houve um incêndio na casa da minha avó. No dia 10 de outubro de 2026, minha casa foi alagada e precisei sair da minha residência.'
 
@@ -30,7 +42,7 @@ const ROT: Record<Estado, string> = { a_conferir: 'A conferir', confirmado: 'Con
 const COR: Record<Estado, string> = { a_conferir: 'text-amber-800', confirmado: 'text-emerald-800', informado: 'text-slate-600', nao_sei: 'text-slate-600', esclarecer: 'text-orange-800' }
 
 const EXEMPLO_OUTRA = 'No dia 10 de outubro de 2026, a casa da minha tia foi alagada e ela precisou sair da residência dela.'
-const REF_CENARIO: Fato = { valor: '24/10/2026', origem: 'cenario', nota: 'Preenchida com a data do cenário do protótipo.', estado: 'a_conferir' }
+const REF_CENARIO: Fato = { valor: fmt(HOJE), origem: 'cenario', nota: `Preenchida com a ${HOJE_ORIGEM}.`, estado: 'a_conferir' }
 const CURTO: Record<string, string> = { sujeito: 'Aconteceu com você', evento: 'Acontecimento', saida: 'Saída da própria residência', data: 'Data do acontecimento', ref: 'Data de referência', docs: 'Perda de documentos pessoais', moradia: 'Dificuldade com comprovante de moradia' }
 
 function parseData(s?: string) { const m = s?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (!m) return null; const d = new Date(+m[3], +m[2] - 1, +m[1]); return d.getDate() === +m[1] && d.getMonth() === +m[2] - 1 ? d : null }
@@ -78,8 +90,8 @@ function derivar(f: Fatos) {
   const ramo = v('sujeito') === 'Sim' && ['Alagação', 'Incêndio'].includes(v('evento')) && v('saida') === 'Sim'
   const fora = v('saida') === 'Não' || v('sujeito') === 'Não, aconteceu com outra pessoa' || v('evento') === 'Outro evento'
   const cobertura = fora ? { refs: [...(v('docs') === 'Sim' ? ['Item 6.8: trata de perda, roubo ou extravio de documentos.'] : []), 'Item 6.10: alternativa prevista no edital, não avaliada neste protótipo.'] } : null
-  if (ramo && dataOk) passos.push({ id: 'separar', titulo: 'Separe os documentos que você já possui', instrucao: 'Reúna os documentos que ainda estão com você e anote quais foram perdidos, para levar ao atendimento.', motivo: 'O item 6.9 trata da situação de quem precisou sair da própria residência por evento adverso. Separar o que você tem organiza a preparação; não garante que a documentação seja suficiente para toda a inscrição.', depende: ['sujeito', 'evento', 'saida', 'data'], fonte: 'Edital Proaes 01/2026, item 6.9', links: [['Consultar o edital', URL_ED]] })
-  passos.push({ id: 'anexos', titulo: 'Consulte os Anexos VI e VII e os comprovantes mencionados no edital', instrucao: 'Abra o pacote de anexos e leia as páginas 6 e 7. A Ponte não preenche os anexos.', motivo: 'Os anexos indicam declarações que podem ser pedidas. Esta orientação vale independentemente das informações declaradas.', depende: [], fonte: 'Anexos do Edital Proaes 01/2026, páginas 6 e 7', links: [['Consultar anexos', URL_AN]], geral: true })
+  if (ramo && dataOk) passos.push({ id: 'separar', titulo: 'Separe os documentos que você já possui', instrucao: 'Reúna os documentos que ainda estão com você e anote quais foram perdidos, para levar ao atendimento.', motivo: 'O item 6.9 trata da situação de quem precisou sair da própria residência por evento adverso. Separar o que você tem organiza a preparação; não garante que a documentação seja suficiente para toda a inscrição.', depende: ['sujeito', 'evento', 'saida', 'data'], fonte: `${NOME_ED}, item 6.9`, links: [['Consultar o edital', URL_ED]] })
+  passos.push({ id: 'anexos', titulo: 'Consulte os Anexos VI e VII e os comprovantes mencionados no edital', instrucao: 'Abra o pacote de anexos e leia as páginas 6 e 7. A Ponte não preenche os anexos.', motivo: 'Os anexos indicam declarações que podem ser pedidas. Esta orientação vale independentemente das informações declaradas.', depende: [], fonte: `Anexos do ${NOME_ED}, páginas 6 e 7`, links: [['Consultar anexos', URL_AN]], geral: true })
   const dataPendente = ramo && f.data?.estado !== 'a_conferir' && !dataOk
   if (dataPendente) esclarecer.push(dataErro
     ? { t: 'A data do acontecimento está depois da data de referência. Confira as duas datas para que a condição de tempo deste recorte possa ser verificada.', acao: 'Conferir datas', campo: 'data', editar: true }
@@ -89,14 +101,14 @@ function derivar(f: Fatos) {
     else if (x.estado === 'a_conferir') esclarecer.push({ t: `Sugestão ainda não conferida: ${c.label}`, acao: 'Conferir', campo: c.id })
     else if (x.estado === 'esclarecer') esclarecer.push({ t: 'O relato menciona mais de um acontecimento. Escolha qual será analisado.', acao: 'Escolher', campo: c.id, editar: true })
     else if (x.valor === 'Não sei') esclarecer.push({ t: `Você respondeu "Não sei" para: ${c.label.replace(/\?$/, '')}. As orientações que dependem disso ficam gerais.`, acao: 'Responder', campo: c.id, editar: true }) }
-  if (v('moradia') === 'Sim') perguntas.push({ id: 'q-moradia', titulo: 'Prepare uma pergunta para a Proaes sobre moradia', instrucao: 'Considerando a situação descrita no item 6.9, como devo apresentar a documentação de moradia mencionada no item 8.4?', motivo: 'Você informou dificuldade para apresentar comprovante de moradia ou contrato.', depende: ['moradia'], fonte: 'Edital Proaes 01/2026, itens 6.9 e 8.4', links: [['Consultar o edital', URL_ED]] })
-  perguntas.push({ id: 'q-anexos', titulo: 'Pergunte qual versão dos anexos utilizar', instrucao: 'O Anexo VI menciona 2025/Edital 02/2025 no cabeçalho e 2026 na assinatura, e o Anexo VII inclui declaração de benefício anterior. Qual versão devo utilizar e como proceder se a declaração não corresponder ao meu caso?', motivo: 'Há uma diferença no pacote consultado. A Ponte não considera os anexos inválidos nem adapta datas.', depende: [], fonte: 'Anexos do Edital Proaes 01/2026, páginas 6 e 7', links: [['Consultar anexos', URL_AN]], limite: 'Pendência normativa: afeta a orientação dos anexos, não os demais passos.' })
+  if (v('moradia') === 'Sim') perguntas.push({ id: 'q-moradia', titulo: 'Prepare uma pergunta para a Proaes sobre moradia', instrucao: 'Considerando a situação descrita no item 6.9, como devo apresentar a documentação de moradia mencionada no item 8.4?', motivo: 'Você informou dificuldade para apresentar comprovante de moradia ou contrato.', depende: ['moradia'], fonte: `${NOME_ED}, itens 6.9 e 8.4`, links: [['Consultar o edital', URL_ED]] })
+  perguntas.push({ id: 'q-anexos', titulo: 'Pergunte qual versão dos anexos utilizar', instrucao: 'O Anexo VI menciona 2025/Edital 02/2025 no cabeçalho e 2026 na assinatura, e o Anexo VII inclui declaração de benefício anterior. Qual versão devo utilizar e como proceder se a declaração não corresponder ao meu caso?', motivo: 'Há uma diferença no pacote consultado. A Ponte não considera os anexos inválidos nem adapta datas.', depende: [], fonte: `Anexos do ${NOME_ED}, páginas 6 e 7`, links: [['Consultar anexos', URL_AN]], limite: 'Pendência normativa: afeta a orientação dos anexos, não os demais passos.' })
   return { passos, esclarecer, perguntas, cobertura }
 }
 
 function resumoTexto(f: Fatos) {
   const d = derivar(f); const L: string[] = []
-  L.push('Ponte: conferência preliminar (protótipo independente)', 'Edital: UFAC / Proaes, Edital 01/2026 – Auxílio Emergencial. Processo 23107.000688/2026-82. Fonte consultada em 24/10/2026.', `Data de referência: ${f.ref?.valor || 'não informada'}`, '', 'Fatos declarados:')
+  L.push('Ponte: conferência preliminar (protótipo independente)', `Edital: ${NOME_ED}, ${ED.titulo}. Processo ${FONTES.processo}. Fontes consultadas em ${fmt(FONTES.consultadoEm)}.`, `Data de referência: ${f.ref?.valor || 'não informada'}`, '', 'Fatos declarados:')
   CAMPOS.forEach(c => { const x = f[c.id]; if (x && x.valor && x.valor !== 'Não sei' && x.estado !== 'a_conferir' && x.estado !== 'nao_sei') L.push(`- ${c.label} ${x.valor} (${ROT[x.estado]})`) })
   L.push('', 'Fatos desconhecidos ou pendentes:'); CAMPOS.forEach(c => { const x = f[c.id]; if (!x || !x.valor || x.valor === 'Não sei' || x.estado === 'a_conferir' || x.estado === 'nao_sei' || x.estado === 'esclarecer') L.push(`- ${c.label} ${!x ? 'Não respondido' : x.estado === 'a_conferir' ? 'A conferir' : 'Não sei'}`) })
   L.push('', 'Próximos passos atuais:'); d.passos.forEach(p => L.push(`- ${p.titulo} (${p.fonte})`))
@@ -116,13 +128,13 @@ const lnk = 'text-[#1f5b47] underline underline-offset-2 hover:text-[#174636]'
 /* Links soltos e ações em lista: sublinhado só no hover. Links dentro de frases usam lnk (sempre sublinhado). */
 const lnkAcao = 'font-medium text-[#1f5b47] no-underline hover:underline underline-offset-2 hover:text-[#174636] rounded-sm'
 
-/* Etapas já visitadas podem ser reabertas; as seguintes ficam bloqueadas até o fluxo chegar nelas. */
-function Etapas({ e, max, ir }: { e: number; max: number; ir: (n: number) => void }) {
-  const n = ['Contexto do edital', 'Minha situação', 'Conferir informações', 'Próximos passos e resumo']
+/* Etapas já visitadas podem ser reabertas; as seguintes ficam bloqueadas até o fluxo chegar nelas.
+   Mesmo indicador para o fluxo guiado e para a preparação genérica. */
+function Etapas({ n, e, max, ir }: { n: string[]; e: number; max: number; ir: (n: number) => void }) {
   return <nav aria-label="Etapas da tarefa">
-    <div className="sm:hidden pb-3 flex items-center gap-2 text-sm"><label htmlFor="etapa-sel" className="shrink-0 text-slate-500">Etapa {e + 1} de 4:</label>
+    <div className="sm:hidden pb-3 flex items-center gap-2 text-sm"><label htmlFor="etapa-sel" className="shrink-0 text-slate-500">Etapa {e + 1} de {n.length}:</label>
       <select id="etapa-sel" value={e} onChange={ev => ir(Number(ev.target.value))} className="min-h-11 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 font-medium text-[#1f5b47]">{n.map((t, i) => <option key={t} value={i} disabled={i > max}>{t}</option>)}</select></div>
-    <ol className="hidden sm:grid grid-cols-4 gap-4 text-sm">{n.map((t, i) => { const atual = i === e, livre = i <= max
+    <ol className="hidden sm:grid gap-4 text-sm" style={{ gridTemplateColumns: `repeat(${n.length}, minmax(0, 1fr))` }}>{n.map((t, i) => { const atual = i === e, livre = i <= max
       const cls = `block w-full text-left pb-2.5 pt-1 border-b-2 transition-colors ${atual ? 'border-[#1f5b47] text-[#1f5b47] font-medium' : i < e ? 'border-[#1f5b47]/25 text-slate-700' : livre ? 'border-slate-200 text-slate-700' : 'border-transparent text-slate-400'}`
       return <li key={t}>{livre && !atual
         ? <button type="button" onClick={() => ir(i)} className={`${cls} cursor-pointer hover:text-[#1f5b47] hover:border-[#1f5b47]/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f5b47] rounded-sm`}>{t}</button>
@@ -154,17 +166,24 @@ function Orientacao({ p, f, destaque }: { p: Passo; f: Fatos; destaque?: boolean
 
 /* ---------- App ---------- */
 export default function App() {
-  const [etapa, setEtapa] = useState(0)
-  const [modo, setModo] = useState<'' | 'relato' | 'perguntas'>('')
+  /* Tela, edital e etapa vêm do endereço (#/...). O progresso fica salvo na aba (sessionStorage) para sobreviver a recarregar. */
+  const [rota, navegar] = useRota(); const tela = rota.tela
+  const [ultimoEdital, setUltimoEdital] = useSalvo('edital', GUIADO)
+  const [preparos, setPreparos] = useSalvo<Record<string, Preparo>>('preparos', {})
+  const editalId = tela === 'orientacao' ? rota.edital : ultimoEdital
+  const editalAtivo = EDITAIS.find(e => e.id === editalId) ?? EDITAL_GUIADO, guiado = !!editalAtivo.guiado
+  const verBusca = () => navegar({ tela: 'busca' })
+  const [etapaGuiado, setEtapaGuiado] = useSalvo('guiado.etapa', 0)
+  const [modo, setModo] = useSalvo<'' | 'relato' | 'perguntas'>('guiado.modo', '')
   const [erroModo, setErroModo] = useState(false)
-  const [relato, setRelato] = useState(''); const [exemplo, setExemplo] = useState(false)
+  const [relato, setRelato] = useSalvo('guiado.relato', ''); const [exemplo, setExemplo] = useSalvo('guiado.exemplo', false)
   const [analise, setAnalise] = useState<'idle' | 'carregando' | 'falha'>('idle'); const [erroRelato, setErroRelato] = useState('')
   const [simFalha, setSimFalha] = useState(false)
   const versao = useRef(0)
-  const [relatoAnalisado, setRelatoAnalisado] = useState(''); const [confirmaReanalise, setConfirmaReanalise] = useState(false); const [sabeData, setSabeData] = useState('')
-  const [fatos, setFatos] = useState<Fatos>({})
+  const [relatoAnalisado, setRelatoAnalisado] = useSalvo('guiado.relatoAnalisado', ''); const [confirmaReanalise, setConfirmaReanalise] = useState(false); const [sabeData, setSabeData] = useSalvo('guiado.sabeData', '')
+  const [fatos, setFatos] = useSalvo<Fatos>('guiado.fatos', {})
   const [editando, setEditando] = useState<Record<string, string>>({})
-  const [mudanca, setMudanca] = useState<{ msg: string; retiradas: string[]; novas: string[] } | null>(null)
+  const [mudanca, setMudanca] = useSalvo<{ msg: string; retiradas: string[]; novas: string[] } | null>('guiado.mudanca', null)
   const [limpar, setLimpar] = useState(false); const [copiado, setCopiado] = useState(''); const [copiadoDe, setCopiadoDe] = useState('')
   const pend = Object.keys(editando).length > 0
   const plano = useMemo(() => derivar(fatos), [fatos])
@@ -172,15 +191,36 @@ export default function App() {
   const aConferir = CAMPOS.filter(c => fatos[c.id]?.estado === 'a_conferir' || fatos[c.id]?.estado === 'esclarecer').length
   const errosPerg = CAMPOS.filter(c => c.data).map(c => ({ c, msg: erroData(c.id, fatos[c.id]?.valor ?? '', fatos) })).filter(x => x.msg)
   const [mostrarErros, setMostrarErros] = useState(false)
-  const [alcancada, setAlcancada] = useState(0)
-  const ir = (n: number) => { setEtapa(n); setAlcancada(a => Math.max(a, n)); window.scrollTo(0, 0) }
+  const [alcancada, setAlcancada] = useSalvo('guiado.alcancada', 0)
+  // Etapa pedida no endereço, limitada às etapas já liberadas.
+  const etapa = tela === 'orientacao' && guiado ? Math.min(rota.etapa, alcancada, ETAPAS_GUIADO.length - 1) : etapaGuiado
+  const prep = preparos[editalId] ?? PREPARO_VAZIO
+  const etapaPrep = tela === 'orientacao' && !guiado ? Math.min(rota.etapa, prep.max, ETAPAS_PREPARO.length - 1) : prep.etapa
+  const etapaAtual = guiado ? etapa : etapaPrep
+  const ir = (n: number) => { setAlcancada(a => Math.max(a, n)); navegar({ tela: 'orientacao', edital: editalId, etapa: n }) }
+  const irPrep = (n: number) => { setPreparos(m => { const x = m[editalId] ?? PREPARO_VAZIO; return { ...m, [editalId]: { ...x, max: Math.max(x.max, n) } } }); navegar({ tela: 'orientacao', edital: editalId, etapa: n }) }
+  // Abre a preparação de um edital na etapa em que a pessoa parou.
+  const retomar = (id: string) => navegar({ tela: 'orientacao', edital: id, etapa: EDITAIS.find(e => e.id === id)?.guiado ? etapaGuiado : preparos[id]?.etapa ?? 0 })
+
+  const chaveRota = hashRota(rota)
+  useEffect(() => { window.scrollTo(0, 0) }, [chaveRota])
+  // Endereços inválidos voltam à busca; etapas não liberadas são corrigidas sem criar entrada no histórico.
+  useEffect(() => {
+    if (rota.tela === 'busca' && rota.detalhe && !EDITAIS.some(e => e.id === rota.detalhe)) return navegar({ tela: 'busca' }, true)
+    if (rota.tela !== 'orientacao') return
+    if (!EDITAIS.some(e => e.id === rota.edital)) return navegar({ tela: 'busca' }, true)
+    if (rota.etapa !== etapaAtual) return navegar({ ...rota, etapa: etapaAtual }, true)
+    setUltimoEdital(rota.edital)
+    if (guiado) setEtapaGuiado(etapaAtual)
+    else setPreparos(m => m[rota.edital] && m[rota.edital].etapa === etapaAtual ? m : { ...m, [rota.edital]: { ...(m[rota.edital] ?? PREPARO_VAZIO), etapa: etapaAtual } })
+  }, [chaveRota, etapaAtual])
   const sabeDataV = sabeData || (fatos.data?.valor === 'Não sei' ? 'Não sei' : fatos.data?.valor ? 'Sim' : '')
   const relatoMudou = modo === 'relato' && !!relatoAnalisado && relato !== relatoAnalisado
   const prefillRef = () => setFatos(f => f.ref ? f : { ...f, ref: { ...REF_CENARIO } })
   /* Leva ao fato na tela de conferência e, se pedido, já abre o controle de correção. */
   function irPara(campo?: string, editar?: boolean) {
     if (editar && campo && editando[campo] === undefined) setEditando(e => ({ ...e, [campo]: fatos[campo]?.valor === 'Não sei' ? '' : fatos[campo]?.valor ?? '' }))
-    setEtapa(2); setAlcancada(a => Math.max(a, 2))
+    ir(2)
     setTimeout(() => { const el = campo ? document.getElementById('fato-' + campo) : null; if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }) } else window.scrollTo(0, 0) }, 50)
   }
 
@@ -194,7 +234,10 @@ export default function App() {
       if (simFalha) { setAnalise('falha'); return }
       setFatos(simularAnalise(texto)); setRelatoAnalisado(texto); setAnalise('idle'); setEditando({}); setMudanca(null); ir(2) }, 1400)
   }
-  function declarar(id: string, valor: string) { setFatos(f => { const n = { ...f }; if (!valor.trim()) delete n[id]; else n[id] = { valor, origem: 'usuario', estado: valor === 'Não sei' ? 'nao_sei' : 'informado' }; return n }) }
+  function declarar(id: string, valor: string) { setFatos(f => { const n = { ...f }; if (!valor.trim()) delete n[id]; else n[id] = { valor, origem: 'usuario', estado: valor === 'Não sei' ? 'nao_sei' : 'informado' }
+    if (id === 'evento' && valor !== 'Outro evento') delete n.eventoDesc; return n }) }
+  /* A descrição de "Outro evento" na correção fica em `editando` e só vai para os fatos ao aplicar. */
+  const descartar = (id: string) => setEditando(e => { const { [id]: _, ...r } = e; if (id === 'evento') delete r.eventoDesc; return r })
   function aplicar(id: string) {
     const novo = editando[id]; const base = fatos[id]
     const titulos = (x: Fatos) => { const d = derivar(x); return [...d.passos, ...d.perguntas].map(p => p.titulo) }
@@ -202,11 +245,13 @@ export default function App() {
     // Relato com dois acontecimentos: data e saída do relato pertencem à alagação; não combinar com outro evento.
     if (id === 'evento' && base?.estado === 'esclarecer') for (const k of ['data', 'saida']) { const x = nf[k]; if (x?.origem !== 'relato') continue
       nf[k] = novo === 'Alagação' ? { ...x, estado: 'a_conferir', nota: 'No relato, esta informação aparece junto da alagação. Confira.' } : { valor: '', origem: 'usuario', nota: 'O valor do relato se referia à alagação. Informe o valor referente ao incêndio.', estado: 'a_conferir' } }
-    setFatos(nf); setEditando(e => { const { [id]: _, ...r } = e; return r })
+    if (id === 'evento') { const desc = (editando.eventoDesc ?? fatos.eventoDesc?.valor ?? '').trim()
+      if (novo === 'Outro evento' && desc) nf.eventoDesc = { valor: desc, origem: 'usuario', estado: 'informado' }; else delete nf.eventoDesc }
+    setFatos(nf); descartar(id)
     const antes = titulos(fatos), depois = titulos(nf)
     setMudanca({ msg: `Os próximos passos foram atualizados porque ${motivoCorrecao(id, novo)}.`, retiradas: antes.filter(t => !depois.includes(t)), novas: depois.filter(t => !antes.includes(t)) })
   }
-  function reset() { versao.current++; setEtapa(0); setAlcancada(0); setModo(''); setRelato(''); setExemplo(false); setFatos({}); setEditando({}); setMudanca(null); setAnalise('idle'); setLimpar(false); setCopiado(''); setCopiadoDe(''); setRelatoAnalisado(''); setConfirmaReanalise(false); setSabeData(''); setMostrarErros(false); setErroRelato('') }
+  function reset() { versao.current++; setAlcancada(0); setEtapaGuiado(0); setErroModo(false); navegar({ tela: 'orientacao', edital: GUIADO, etapa: 0 }); setModo(''); setRelato(''); setExemplo(false); setFatos({}); setEditando({}); setMudanca(null); setAnalise('idle'); setLimpar(false); setCopiado(''); setCopiadoDe(''); setRelatoAnalisado(''); setConfirmaReanalise(false); setSabeData(''); setMostrarErros(false); setErroRelato('') }
   async function copiar() { try { await navigator.clipboard.writeText(resumo); setCopiado('ok'); setCopiadoDe(resumo) } catch { setCopiado('falha') } }
 
   /* Fato revisável: usado em Conferir e no plano. Chamado como função (não como componente) para o campo não perder o foco ao digitar. */
@@ -218,9 +263,9 @@ export default function App() {
       {x?.trecho && <p className="mt-1.5 text-sm text-slate-600">Do seu relato: <span className="text-slate-800">“{x.trecho}”</span></p>}{x?.nota && <p className="mt-1.5 text-sm text-slate-600">{x.nota}</p>}
       {x?.valor === 'Não, aconteceu com outra pessoa' && <p className="mt-2 text-sm">Fatos de outra pessoa não são atribuídos a você.</p>}
       {ed && <div className="mt-2">{c.opts ? <Opcoes rotulo={c.label} nome={'ed-' + c.id} opts={c.opts} valor={editando[c.id]} onChange={v => setEditando(e => ({ ...e, [c.id]: v }))} /> : <><CampoData id={'ed-' + c.id} valor={editando[c.id]} erro={err} onChange={v => setEditando(e => ({ ...e, [c.id]: v }))} /><label className="mt-2 flex gap-2 text-sm items-center"><input type="checkbox" className="accent-[#1f5b47]" checked={editando[c.id] === 'Não sei'} onChange={e => setEditando(s => ({ ...s, [c.id]: e.target.checked ? 'Não sei' : '' }))} />Não sei</label></>}
-        {c.id === 'evento' && editando.evento === 'Outro evento' && <div className="mt-3"><label htmlFor="ed-eventoDesc" className="block text-sm font-medium">Descreva brevemente o acontecimento</label><input id="ed-eventoDesc" maxLength={80} value={fatos.eventoDesc?.valor ?? ''} onChange={e => declarar('eventoDesc', e.target.value)} className="mt-1 w-full max-w-md min-h-11 px-3 rounded-md border border-slate-300 bg-white" /><p className="mt-1 text-xs text-slate-500">Não é preciso usar termos do edital.</p></div>}
+        {c.id === 'evento' && editando.evento === 'Outro evento' && <div className="mt-3"><label htmlFor="ed-eventoDesc" className="block text-sm font-medium">Descreva brevemente o acontecimento</label><input id="ed-eventoDesc" maxLength={80} value={editando.eventoDesc ?? fatos.eventoDesc?.valor ?? ''} onChange={e => { const v = e.target.value; setEditando(s => ({ ...s, eventoDesc: v })) }} className="mt-1 w-full max-w-md min-h-11 px-3 rounded-md border border-slate-300 bg-white" /><p className="mt-1 text-xs text-slate-500">Não é preciso usar termos do edital.</p></div>}
         <p className="mt-2 text-sm font-medium text-amber-900">Alteração ainda não aplicada</p>
-        <div className="mt-2 flex flex-wrap gap-2"><button className={btnP} disabled={!editando[c.id] || !!err} onClick={() => aplicar(c.id)}>Aplicar correção</button><button className={btnSm} onClick={() => setEditando(e => { const { [c.id]: _, ...r } = e; return r })}>Descartar</button></div></div>}
+        <div className="mt-2 flex flex-wrap gap-2"><button className={btnP} disabled={!editando[c.id] || !!err} onClick={() => aplicar(c.id)}>Aplicar correção</button><button className={btnSm} onClick={() => descartar(c.id)}>Descartar</button></div></div>}
       {!ed && <div className="mt-3 flex flex-wrap gap-2">
         {x?.estado === 'a_conferir' && x.valor && <button className={btnSmP} onClick={() => setFatos(f => ({ ...f, [c.id]: { ...x, estado: 'confirmado' } }))}>{c.id === 'ref' ? 'Confirmar data' : 'Confirmar'}</button>}
         <button className={btnSm} onClick={() => setEditando(e => ({ ...e, [c.id]: x?.valor ?? '' }))}>{x?.estado === 'esclarecer' ? 'Escolher acontecimento' : x ? 'Corrigir' : 'Responder'}</button>
@@ -230,17 +275,25 @@ export default function App() {
   const grupos = [...new Set(CAMPOS.map(c => c.grupo))]
 
   const Contexto = <div className="text-sm">
-    <p className="text-[15px] font-medium text-slate-900">Edital 01/2026, Auxílio Emergencial</p><p className="mt-0.5 text-slate-600">Proaes, Universidade Federal do Acre</p>
-    <dl className="mt-4 space-y-3"><div><dt className="text-xs text-slate-500">Processo</dt><dd className="mt-0.5 text-slate-800">23107.000688/2026-82</dd></div><div><dt className="text-xs text-slate-500">Inscrições</dt><dd className="mt-0.5 text-slate-800">Consulte a página oficial</dd></div><div><dt className="text-xs text-slate-500">O que este protótipo cobre</dt><dd className="mt-0.5 text-slate-800">Orientações parciais sobre saída da residência por evento adverso e perda de documentos pessoais.</dd></div></dl>
-    <div className="mt-5 pt-4 border-t border-slate-200"><h3 className="text-sm font-medium text-slate-900">Fontes</h3><ul className="mt-2 space-y-1.5"><li><a className={lnkAcao} href={URL_PAG} target="_blank" rel="noreferrer">Abrir página do edital<span className="sr-only"> (abre em nova aba)</span></a></li><li><a className={lnkAcao} href={URL_ED} target="_blank" rel="noreferrer">Consultar o edital<span className="sr-only"> (abre em nova aba)</span></a></li><li><a className={lnkAcao} href={URL_AN} target="_blank" rel="noreferrer">Consultar anexos<span className="sr-only"> (abre em nova aba)</span></a></li></ul><p className="mt-2 text-xs text-slate-500">Consultadas em 24/10/2026 (dado do cenário de protótipo).</p></div>
+    <SeloEdital e={ED} />
+    <p className="mt-2 text-[15px] font-medium text-slate-900">{ED.numero}, {ED.titulo}</p><p className="mt-0.5 text-slate-600">{ED.centro}, {INST_ED.nome}</p>
+    <dl className="mt-4 space-y-3"><div><dt className="text-xs text-slate-500">Processo</dt><dd className="mt-0.5 text-slate-800">{FONTES.processo}</dd></div><div><dt className="text-xs text-slate-500">Inscrições</dt><dd className="mt-0.5 text-slate-800">{fmtCurto(ED.inicio)} a {fmt(ED.fim)}{FONTES.notaDatas && <span className="block text-xs text-amber-900">{FONTES.notaDatas}</span>}</dd></div><div><dt className="text-xs text-slate-500">O que este protótipo cobre</dt><dd className="mt-0.5 text-slate-800">Orientações parciais sobre saída da residência por evento adverso e perda de documentos pessoais.</dd></div></dl>
+    <div className="mt-5 pt-4 border-t border-slate-200"><h3 className="text-sm font-medium text-slate-900">Fontes</h3><ul className="mt-2 space-y-1.5"><li><a className={lnkAcao} href={URL_PAG} target="_blank" rel="noreferrer">Abrir página do edital<span className="sr-only"> (abre em nova aba)</span></a></li><li><a className={lnkAcao} href={URL_ED} target="_blank" rel="noreferrer">Consultar o edital<span className="sr-only"> (abre em nova aba)</span></a></li><li><a className={lnkAcao} href={URL_AN} target="_blank" rel="noreferrer">Consultar anexos<span className="sr-only"> (abre em nova aba)</span></a></li></ul><p className="mt-2 text-xs text-slate-500">Consultadas em {fmt(FONTES.consultadoEm)} ({HOJE_ORIGEM}).</p></div>
+    <button className={`${lnkAcao} mt-4 text-sm`} onClick={verBusca}>Ver outros editais</button>
     <p className="mt-4 pt-4 border-t border-slate-200 text-slate-600">Outros requisitos não foram avaliados. A análise do pedido é da Proaes.</p></div>
 
   return <div className="min-h-screen">
-    <header className="bg-white border-b border-slate-200"><div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5"><span className="text-xl font-semibold text-[#1f5b47]">Ponte</span><span className="text-sm text-slate-700">Preparação documental com fontes</span></div><span className="text-xs text-slate-500">Protótipo independente, com dados fictícios</span></div>
-      <div className="max-w-6xl mx-auto px-4 sm:pt-1"><Etapas e={etapa} max={alcancada} ir={ir} /></div></header>
+    <header className="bg-white border-b border-slate-200 print:hidden"><div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5"><span className="text-xl font-semibold text-[#1f5b47]">Ponte</span><span className="text-sm text-slate-700">Preparação documental com fontes</span></div><nav aria-label="Seções" className="order-last flex w-full gap-1 sm:order-none sm:w-auto">{([['busca', 'Buscar editais'], ['orientacao', 'Preparar documentação'], ['sobre', 'Sobre']] as const).map(([k, t]) => <button key={k} aria-current={tela === k ? 'page' : undefined} onClick={() => k === 'orientacao' ? retomar(ultimoEdital) : navegar({ tela: k })} className={`h-9 rounded-lg px-3 text-sm font-medium transition-colors ${tela === k ? 'bg-[#e8f1ec] text-[#16392d]' : 'text-slate-700 hover:bg-slate-100'}`}>{t}</button>)}</nav><span className="hidden text-xs text-slate-500 md:inline">Protótipo independente</span></div>
+      {tela === 'orientacao' && <div className="max-w-6xl mx-auto px-4 sm:pt-1"><p className="truncate pb-2 text-xs text-slate-500">Preparando: <span className="font-medium text-slate-700">{nomeEdital(editalAtivo)} · {editalAtivo.titulo}</span></p>
+        {guiado ? <Etapas n={ETAPAS_GUIADO} e={etapa} max={alcancada} ir={ir} /> : <Etapas n={ETAPAS_PREPARO} e={etapaPrep} max={prep.max} ir={irPrep} />}</div>}</header>
+    <div hidden={tela !== 'busca'}><BuscaEditais ativo={tela === 'busca'} detalhe={rota.tela === 'busca' ? rota.detalhe : undefined} onAbrir={id => navegar({ tela: 'busca', detalhe: id })} onVoltar={verBusca} onPreparar={retomar} /></div>
+    {tela === 'sobre' && <Sobre onBuscar={verBusca} />}
+    {tela === 'orientacao' && !guiado && <PrepararEdital key={editalId} e={editalAtivo} p={prep} etapa={etapaPrep} ir={irPrep} set={np => setPreparos(m => ({ ...m, [editalId]: np }))} onTrocar={verBusca}
+      onRecomecar={() => { setPreparos(m => { const { [editalId]: _, ...r } = m; return r }); navegar({ tela: 'orientacao', edital: editalId, etapa: 0 }) }} />}
+    <div hidden={tela !== 'orientacao' || !guiado}>
     <main className="max-w-6xl mx-auto px-4 py-8 sm:py-10 grid gap-8 lg:gap-12 lg:grid-cols-[1fr_300px]">
       <section className="min-w-0 space-y-6 [&>section]:mt-10 [&>fieldset]:mt-10">
-        {etapa > 0 && <details className="lg:hidden rounded-md border border-slate-200 bg-white p-3"><summary className="cursor-pointer font-medium">Edital 01/2026 da Proaes: contexto e fontes</summary><div className="mt-3">{Contexto}</div></details>}
+        {etapa > 0 && <details className="lg:hidden rounded-md border border-slate-200 bg-white p-3"><summary className="cursor-pointer font-medium">{NOME_ED}: contexto e fontes</summary><div className="mt-3">{Contexto}</div></details>}
 
         {etapa === 0 && <>
           <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.01em] text-slate-900">Prepare seus próximos passos</h1><p className="-mt-3 text-slate-700">Conte sua situação, confira as informações e consulte orientações com a fonte ao lado.</p>
@@ -249,7 +302,7 @@ export default function App() {
             {erroModo && <p className="text-sm text-red-800">Escolha uma forma de começar.</p>}
             {([['relato', 'Quero contar minha situação', 'Você escreve com suas palavras. A organização das informações é uma simulação de IA neste protótipo.'], ['perguntas', 'Prefiro responder perguntas', 'Você responde diretamente às mesmas informações.']] as const).map(([k, t, d]) => <label key={k} className={`flex gap-3 p-4 rounded-lg border cursor-pointer bg-white ${modo === k ? 'border-[#1f5b47] ring-1 ring-[#1f5b47]' : 'border-slate-200'}`}><input type="radio" name="modo" className="mt-1 accent-[#1f5b47]" checked={modo === k} onChange={() => { setModo(k); setErroModo(false) }} /><span><span className="font-medium block">{t}</span><span className="text-sm text-slate-700">{d}</span></span></label>)}</fieldset>
           <button className={btnP} onClick={() => { if (!modo) return setErroModo(true); if (modo === 'perguntas') prefillRef(); ir(1) }}>Continuar</button>
-          <Expansivel titulo="Entender o que este protótipo avalia"><p>A Ponte faz uma conferência preliminar de um recorte do Edital 01/2026: saída da própria residência por evento adverso e perda de documentos pessoais. Não avalia renda, composição familiar nem outros requisitos. Não envia pedidos. A instituição analisa e decide.</p></Expansivel>
+          <Expansivel titulo="Entender o que este protótipo avalia"><p>A Ponte faz uma conferência preliminar de um recorte do {NOME_ED}: saída da própria residência por evento adverso e perda de documentos pessoais. Não avalia renda, composição familiar nem outros requisitos. Não envia pedidos. A instituição analisa e decide.</p></Expansivel>
         </>}
 
         {etapa === 1 && modo === 'relato' && <>
@@ -291,9 +344,9 @@ export default function App() {
 
         {etapa === 3 && <>
           <div className="flex flex-wrap justify-between gap-2"><h1 className="text-[26px] leading-tight font-semibold tracking-[-0.01em] text-slate-900">Próximos passos para preparar seu atendimento</h1><button className={btnS} onClick={() => ir(2)}>Editar informações</button></div>
-          <p className="-mt-3 text-[15px] text-slate-600">Edital Proaes 01/2026. Conferência preliminar com base nas informações que você declarou; não substitui a análise da Proaes.</p>
+          <p className="-mt-3 text-[15px] text-slate-600">{NOME_ED}. Conferência preliminar com base nas informações que você declarou; não substitui a análise da Proaes.</p>
           <div><h2 className="mb-1 text-sm font-medium text-slate-600">Informações usadas nesta orientação</h2><dl className="grid gap-x-8 text-sm sm:grid-cols-2">{CAMPOS.map(c => { const x = fatos[c.id]; return <div key={c.id} className="flex justify-between gap-4 border-b border-slate-200 py-2"><dt className="text-slate-600">{CURTO[c.id]}</dt><dd className="text-right text-slate-900">{!x || !x.valor ? <span className="text-slate-500">{x?.estado === 'esclarecer' ? 'A escolher' : 'Não respondido'}</span> : x.estado === 'a_conferir' ? <span className="text-amber-800">{x.valor} (a conferir)</span> : <>{x.valor}{c.id === 'evento' && x.valor === 'Outro evento' && fatos.eventoDesc?.valor ? `: ${fatos.eventoDesc.valor}` : ''}</>}</dd></div> })}</dl></div>
-          <section><h2 className="text-lg font-semibold">Revise uma informação</h2><p className="mt-0.5 text-sm text-slate-600">Se algo estiver diferente, corrija aqui. Os próximos passos se ajustam sem nova análise do relato.</p><div className={`mt-3 ${LISTA}`}>{[CAMPOS[2], ...CAMPOS.filter(c => c.id !== 'saida' && editando[c.id] !== undefined)].map(c => fatoRevisavel(c))}</div></section>
+          <section className="print:hidden"><h2 className="text-lg font-semibold">Revise uma informação</h2><p className="mt-0.5 text-sm text-slate-600">Se algo estiver diferente, corrija aqui. Os próximos passos se ajustam sem nova análise do relato.</p><div className={`mt-3 ${LISTA}`}>{[CAMPOS[2], ...CAMPOS.filter(c => c.id !== 'saida' && editando[c.id] !== undefined)].map(c => fatoRevisavel(c))}</div></section>
           {mudanca && !pend && <Aviso tipo="info" titulo={mudanca.msg}>{(mudanca.retiradas.length > 0 || mudanca.novas.length > 0) && <Expansivel titulo="O que mudou (registro)">{mudanca.retiradas.length > 0 && <p>Orientação retirada, não está mais ativa: <s>{mudanca.retiradas.join('; ')}</s></p>}{mudanca.novas.length > 0 && <p>Orientação nova: {mudanca.novas.join('; ')}</p>}</Expansivel>}</Aviso>}
           <section className="space-y-3"><h2 className="text-lg font-semibold">Passos com base no que você informou</h2>
             {plano.cobertura && <Aviso tipo="info" titulo="Este recorte não cobre essa combinação de informações">Isso não é uma decisão sobre o seu pedido. Consulte a Proaes; estas referências do edital podem ajudar:<ul className="mt-1 list-disc pl-5">{plano.cobertura.refs.map(r => <li key={r}>{r}</li>)}</ul></Aviso>}
@@ -305,16 +358,22 @@ export default function App() {
           <section className="space-y-3"><h2 className="text-lg font-semibold">Perguntas para a Proaes</h2>{plano.perguntas.map(p => <Orientacao key={p.id} p={p} f={fatos} />)}</section>
           <section className="space-y-2 border-t border-slate-200 pt-5"><h2 className="text-lg font-semibold">Resumo</h2>
             {pend ? <Aviso tipo="atencao" titulo="Alteração ainda não aplicada">Aplique ou descarte a correção em "Revise uma informação", acima, para ver o resumo atualizado.</Aviso> : <>
-              <label htmlFor="resumo" className="text-sm text-slate-700">Selecione o texto e copie, ou use o botão.</label>
-              <textarea id="resumo" readOnly rows={14} value={resumo} className="w-full rounded-md border border-slate-300 bg-slate-50 p-4 text-sm leading-relaxed" onFocus={e => e.target.select()} />
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2"><button className={btnP} onClick={copiar}>Copiar resumo</button>{copiado === 'ok' && copiadoDe === resumo && <span role="status" className="text-sm">Resumo copiado. Um texto já copiado não é atualizado por correções posteriores.</span>}{copiado === 'ok' && copiadoDe !== resumo && <span role="status" className="text-sm text-amber-900">O resumo mudou depois da última cópia. Copie de novo para levar a versão atual.</span>}{copiado === 'falha' && <span role="status" className="text-sm">Não foi possível copiar. Selecione o texto e copie.</span>}</div></>}
+              <label htmlFor="resumo" className="text-sm text-slate-700 print:hidden">Selecione o texto e copie, ou use o botão.</label>
+              <pre className="hidden whitespace-pre-wrap font-[inherit] text-sm leading-relaxed print:block">{resumo}</pre>
+              <textarea id="resumo" readOnly rows={14} value={resumo} className="print:hidden w-full rounded-md border border-slate-300 bg-slate-50 p-4 text-sm leading-relaxed" onFocus={e => e.target.select()} />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 print:hidden"><button className={btnP} onClick={copiar}>Copiar resumo</button><button className={btnS} onClick={() => window.print()}>Imprimir ou salvar PDF</button>{copiado === 'ok' && copiadoDe === resumo && <span role="status" className="text-sm">Resumo copiado. Um texto já copiado não é atualizado por correções posteriores.</span>}{copiado === 'ok' && copiadoDe !== resumo && <span role="status" className="text-sm text-amber-900">O resumo mudou depois da última cópia. Copie de novo para levar a versão atual.</span>}{copiado === 'falha' && <span role="status" className="text-sm">Não foi possível copiar. Selecione o texto e copie.</span>}</div></>}
           </section>
-          <section className="border-t border-slate-200 pt-4">{!limpar ? <button className={btnS} onClick={() => setLimpar(true)}>Começar outro caso</button> : <div className="rounded-md border border-slate-300 bg-white p-4"><p>Isso apaga as informações deste caso. Nada fica salvo após fechar a sessão.</p><div className="mt-3 flex flex-wrap gap-2"><button className={btnP} onClick={reset}>Apagar e começar</button><button className={btnS} onClick={() => setLimpar(false)}>Manter caso atual</button></div></div>}</section>
+          <section className="border-t border-slate-200 pt-4 print:hidden">{!limpar ? <button className={btnS} onClick={() => setLimpar(true)}>Começar outro caso</button> : <div className="rounded-md border border-slate-300 bg-white p-4"><p>Isso apaga o relato e as informações deste caso, inclusive o que estava salvo nesta aba. As preparações de outros editais não são afetadas.</p><div className="mt-3 flex flex-wrap gap-2"><button className={btnP} onClick={reset}>Apagar e começar</button><button className={btnS} onClick={() => setLimpar(false)}>Manter caso atual</button></div></div>}</section>
         </>}
       </section>
-      <aside className="hidden lg:block"><div className="sticky top-4 rounded-xl border border-slate-200 bg-white p-5"><h2 className="text-xs font-medium text-slate-500 mb-2">Edital em uso</h2>{Contexto}</div></aside>
+      <aside className="hidden lg:block print:hidden"><div className="sticky top-4 rounded-xl border border-slate-200 bg-white p-5"><h2 className="text-xs font-medium text-slate-500 mb-2">Edital em uso</h2>{Contexto}</div></aside>
     </main>
-    {/* Controles só para demonstrar estados do protótipo; não fazem parte do produto. */}
-    <footer className="max-w-6xl mx-auto px-4 pb-10"><div className="pt-5 border-t border-slate-200 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-500"><span>Controles de demonstração do protótipo</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="accent-[#1f5b47]" checked={simFalha} onChange={e => setSimFalha(e.target.checked)} />Simular falha na organização do relato</label></div></footer>
+    </div>
+    <footer className="max-w-6xl mx-auto px-4 pb-10 print:hidden"><div className="pt-5 border-t border-slate-200 flex flex-wrap items-start justify-between gap-x-6 gap-y-3 text-xs text-slate-500">
+      <p>Protótipo independente. O que você preenche fica salvo só nesta aba e é apagado ao fechá-la. <button className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900" onClick={() => navegar({ tela: 'sobre' })}>Privacidade</button></p>
+      <ApagarDados compacto />
+      {/* Só para demonstrar estados do protótipo; não aparece para quem usa o produto. */}
+      {DEMO && <div className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-dashed border-slate-300 px-3 py-2"><span className="font-medium">Modo demonstração</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="accent-[#1f5b47]" checked={simFalha} onChange={e => setSimFalha(e.target.checked)} />Simular falha na organização do relato</label></div>}
+    </div></footer>
   </div>
 }
