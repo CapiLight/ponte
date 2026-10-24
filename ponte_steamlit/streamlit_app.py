@@ -20,6 +20,7 @@ from ponte.fontes import EDITAL_01_2026 as EDITAL
 from ponte.mudancas import comparar, descrever
 from ponte.regras import LIMITE, Tipo, gerar_plano
 from ponte.resumo import gerar_resumo
+from consulta_ui import conferir_fluxo_guiado, fluxo_liberado, horario, pagina_catalogo
 
 APP_DIR = Path(__file__).resolve().parent
 FUSO_RIO_BRANCO = timezone(timedelta(hours=-5))
@@ -116,7 +117,10 @@ def mostrar_fontes() -> None:
     st.markdown(f"- [Página do edital]({EDITAL.pagina_oficial})")
     for documento in EDITAL.documentos.values():
         st.markdown(f"- [{documento.titulo}]({documento.url})")
-    st.caption("Consulta registrada em 24/10/2026. Confira a página oficial para alterações e situação atual.")
+    if fluxo_liberado():
+        st.caption(f"PDFs conferidos no portal em {horario(st.session_state.fontes_verificadas_em)}.")
+    else:
+        st.caption("As referências abaixo pertencem à versão revisada. Confira os arquivos publicados antes de continuar.")
 
 
 def pagina_contexto() -> None:
@@ -137,6 +141,8 @@ def pagina_contexto() -> None:
         )
         mostrar_fontes()
 
+    conferir_fluxo_guiado()
+
     st.radio(
         "Como prefere informar sua situação?",
         options=["Quero contar minha situação", "Prefiro responder perguntas"],
@@ -146,7 +152,7 @@ def pagina_contexto() -> None:
     st.session_state.modo_entrada = (
         "relato" if st.session_state.modo_visivel == "Quero contar minha situação" else "perguntas"
     )
-    if st.button("Começar", type="primary"):
+    if st.button("Começar", type="primary", disabled=not fluxo_liberado()):
         st.session_state.etapa = 1
         st.rerun()
 
@@ -459,6 +465,7 @@ def pagina_resultado() -> None:
     st.info(LIMITE)
     st.markdown("### Resumo copiável")
     resumo = gerar_resumo(caso, plano, EDITAL)
+    resumo += f"\n\nConferência online dos PDFs: {horario(st.session_state.fontes_verificadas_em)}."
     st.text_area(
         "Selecione e copie o resumo atualizado",
         value=resumo,
@@ -489,6 +496,18 @@ def rodape_privacidade() -> None:
 def main() -> None:
     inicializar_estado()
     titulo()
+    area = st.sidebar.radio("Navegação", ["Editais UFAC", "Preparar auxílio emergencial"])
+    if area == "Editais UFAC":
+        pagina_catalogo(chave=chave_gemma(), modelo=modelo_gemma())
+        rodape_privacidade()
+        return
+    if st.session_state.etapa > 0 and not fluxo_liberado():
+        st.warning("A conferência das fontes expirou ou não foi concluída. Suas respostas foram preservadas.")
+        conferir_fluxo_guiado()
+        if fluxo_liberado():
+            st.rerun()
+        rodape_privacidade()
+        return
     cabecalho_etapas()
     etapa = st.session_state.etapa
     if etapa == 0:
