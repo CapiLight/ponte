@@ -4,6 +4,8 @@ import Sobre, { ApagarDados } from './Sobre'
 import PrepararEdital, { ETAPAS_PREPARO } from './PrepararEdital'
 import { useSalvo } from './persistencia'
 import { hashRota, useRota } from './rota'
+import { ErroIA, LIMITES, analisarRelato, opcoesSimulado, provedor, type CampoAnalise, type RespostaRelato } from './ia'
+import { EXEMPLO, EXEMPLO_DOIS, EXEMPLO_OUTRA, verificarConformidade } from './ia/casos'
 import { EDITAIS, EDITAL_GUIADO, HOJE, HOJE_ORIGEM, INST, fmt, fmtCurto, nomeEdital } from './editais'
 import { PREPARO_VAZIO, type Preparo } from './preparo'
 
@@ -12,17 +14,14 @@ const GUIADO = EDITAL_GUIADO.id
 const DEMO = import.meta.env.DEV || new URLSearchParams(location.search).has('demo')
 const ETAPAS_GUIADO = ['Contexto do edital', 'Minha situação', 'Conferir informações', 'Próximos passos e resumo']
 
-/* Contrato conceitual (anotação técnica):
-   caso = { modo, relato:{texto, versao}, fatos:{[id]:{valor, origem, trecho, estado, versao}}, ultimaMudanca }
+/* Regras do caso (contrato com o modelo em src/ia/CONTRATO.md):
    Fatos derivam do relato apenas por ação explícita "Analisar relato". Corrigir um fato NÃO chama o modelo.
-   Resposta de análise com versao != relato.versao atual é descartada (não sobrescreve edição).
-   Orientações e resumo são funções puras do estado atual dos fatos. Streamlit: st.session_state["caso"]. */
+   Resposta de análise com versao != versão atual do relato é descartada (não sobrescreve edição).
+   Orientações e resumo são funções puras do estado atual dos fatos. */
 
 /* Dados do edital guiado vêm do catálogo (fonte única). */
 const ED = EDITAL_GUIADO, FONTES = ED.fontes!, NOME_ED = nomeEdital(ED), INST_ED = INST[ED.inst]
 const URL_PAG = FONTES.pagina, URL_ED = FONTES.edital, URL_AN = FONTES.anexos!
-const EXEMPLO = 'No dia 10 de outubro de 2026, minha casa foi alagada. Precisei sair da minha residência e perdi meus documentos pessoais.'
-const EXEMPLO_DOIS = 'Em 2023 houve um incêndio na casa da minha avó. No dia 10 de outubro de 2026, minha casa foi alagada e precisei sair da minha residência.'
 
 type Estado = 'a_conferir' | 'confirmado' | 'informado' | 'nao_sei' | 'esclarecer'
 /* origem: relato (sugestão com trecho literal), usuario (declaração direta) ou cenario (valor do protótipo a conferir). nota: explicação que não é citação. */
@@ -41,7 +40,6 @@ const CAMPOS: { id: string; grupo: string; label: string; opts?: string[]; data?
 const ROT: Record<Estado, string> = { a_conferir: 'A conferir', confirmado: 'Confirmado por você', informado: 'Informado por você', nao_sei: 'Não sei', esclarecer: 'Precisa esclarecer' }
 const COR: Record<Estado, string> = { a_conferir: 'text-amber-800', confirmado: 'text-emerald-800', informado: 'text-slate-600', nao_sei: 'text-slate-600', esclarecer: 'text-orange-800' }
 
-const EXEMPLO_OUTRA = 'No dia 10 de outubro de 2026, a casa da minha tia foi alagada e ela precisou sair da residência dela.'
 const REF_CENARIO: Fato = { valor: fmt(HOJE), origem: 'cenario', nota: `Preenchida com a ${HOJE_ORIGEM}.`, estado: 'a_conferir' }
 const CURTO: Record<string, string> = { sujeito: 'Aconteceu com você', evento: 'Acontecimento', saida: 'Saída da própria residência', data: 'Data do acontecimento', ref: 'Data de referência', docs: 'Perda de documentos pessoais', moradia: 'Dificuldade com comprovante de moradia' }
 
@@ -53,26 +51,18 @@ function erroData(id: string, v: string, f: Fatos) {
   return ''
 }
 
-/* Simulação da análise (no produto: Gemma 4). Só retorna trechos literais do relato; explicações vão em "nota". */
-function simularAnalise(t: string): Fatos {
+/* Campos que o modelo pode sugerir a partir do relato. A data de referência é do cenário e nunca vem do relato. */
+const CAMPOS_ANALISE: CampoAnalise[] = CAMPOS.filter(c => c.id !== 'ref').map(c => ({ id: c.id, pergunta: c.label, tipo: c.data ? 'data' : 'opcao', ...(c.opts ? { opcoes: c.opts } : {}) }))
+/* Resposta validada do modelo -> fatos a conferir. Nada entra como confirmado. */
+function fatosDaAnalise(r: RespostaRelato): Fatos {
   const f: Fatos = {}
-  const trecho = (re: RegExp) => t.match(re)?.[0].trim()
-  const sug = (id: string, valor: string, re: RegExp) => { const tr = trecho(re); if (tr) f[id] = { valor, origem: 'relato', trecho: tr, estado: 'a_conferir' } }
-  const alag = /alagad/i.test(t), inc = /inc[eê]ndio/i.test(t)
-  if (alag && inc) f.evento = { valor: '', origem: 'relato', nota: 'O relato menciona um incêndio e uma alagação. Escolha qual acontecimento será analisado.', estado: 'esclarecer' }
-  else if (alag) sug('evento', 'Alagação', /[^.,]*foi alagad[ao]/i)
-  else if (inc) sug('evento', 'Incêndio', /[^.,]*inc[eê]ndio[^.,]*/i)
-  const outra = trecho(/(meu|minha) (pai|mãe|avó|avô|irmã|irmão|tia|tio|amiga|amigo)/i)
-  if (outra && !/minha casa|minha residência|precisei/i.test(t)) f.sujeito = { valor: 'Não, aconteceu com outra pessoa', origem: 'relato', trecho: outra, estado: 'a_conferir' }
-  else sug('sujeito', 'Sim', /minha casa|precisei|perdi/i)
-  sug('saida', 'Sim', /precisei sair da minha residência/i)
-  const m = t.match(/dia (\d{1,2}) de outubro de (\d{4})/i)
-  if (m) f.data = { valor: `${m[1].padStart(2, '0')}/10/${m[2]}`, origem: 'relato', trecho: m[0], estado: 'a_conferir' }
-  sug('docs', 'Sim', /perdi meus documentos pessoais/i)
-  if (alag && inc) for (const k of ['data', 'saida']) { const x = f[k]; if (x) f[k] = { ...x, nota: 'No relato, esta informação aparece junto da alagação.' } }
+  for (const x of r.sugestoes) f[x.campo] = { valor: x.valor, origem: 'relato', trecho: x.trecho, ...(x.nota ? { nota: x.nota } : {}), estado: 'a_conferir' }
+  for (const x of r.esclarecer) f[x.campo] = { valor: '', origem: 'relato', ...(x.trechos.length ? { trecho: x.trechos.join(' … ') } : {}), nota: x.nota, estado: 'esclarecer' }
   f.ref = { ...REF_CENARIO }
   return f
 }
+/* Em desenvolvimento (ou com ?demo): `await ponteIA.verificar()` no console roda os casos de conformidade no provedor atual. */
+if (DEMO) Object.assign(window, { ponteIA: { provedor: provedor.nome, verificar: () => verificarConformidade(provedor, CAMPOS_ANALISE) } })
 
 /* Frase natural para cada correção, mostrada junto ao resultado. */
 function motivoCorrecao(id: string, v: string) {
@@ -179,7 +169,9 @@ export default function App() {
   const [relato, setRelato] = useSalvo('guiado.relato', ''); const [exemplo, setExemplo] = useSalvo('guiado.exemplo', false)
   const [analise, setAnalise] = useState<'idle' | 'carregando' | 'falha'>('idle'); const [erroRelato, setErroRelato] = useState('')
   const [simFalha, setSimFalha] = useState(false)
-  const versao = useRef(0)
+  const versao = useRef(0), chamada = useRef<AbortController | null>(null)
+  /* Cancela a análise em andamento: a resposta, se chegar, é descartada pela versão. */
+  const cancelarAnalise = () => { versao.current++; chamada.current?.abort(); chamada.current = null }
   const [relatoAnalisado, setRelatoAnalisado] = useSalvo('guiado.relatoAnalisado', ''); const [confirmaReanalise, setConfirmaReanalise] = useState(false); const [sabeData, setSabeData] = useSalvo('guiado.sabeData', '')
   const [fatos, setFatos] = useSalvo<Fatos>('guiado.fatos', {})
   const [editando, setEditando] = useState<Record<string, string>>({})
@@ -224,15 +216,21 @@ export default function App() {
     setTimeout(() => { const el = campo ? document.getElementById('fato-' + campo) : null; if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }) } else window.scrollTo(0, 0) }, 50)
   }
 
-  function analisar(forcar = false) {
+  async function analisar(forcar = false) {
     if (analise === 'carregando') return
     if (!relato.trim()) { setErroRelato('Conte o que aconteceu ou escolha responder perguntas.'); return }
     const temRespostas = Object.values(fatos).some(x => x && x.origem !== 'cenario' && x.estado !== 'a_conferir' && x.estado !== 'esclarecer')
     if (temRespostas && !forcar) { setConfirmaReanalise(true); return }
-    setConfirmaReanalise(false); setErroRelato(''); setAnalise('carregando'); const v = ++versao.current; const texto = relato
-    setTimeout(() => { if (v !== versao.current) return // resposta atrasada descartada
-      if (simFalha) { setAnalise('falha'); return }
-      setFatos(simularAnalise(texto)); setRelatoAnalisado(texto); setAnalise('idle'); setEditando({}); setMudanca(null); ir(2) }, 1400)
+    cancelarAnalise(); setConfirmaReanalise(false); setErroRelato(''); setAnalise('carregando')
+    const v = versao.current, texto = relato, ctl = new AbortController(); chamada.current = ctl
+    try {
+      const r = await analisarRelato({ versao: v, relato: texto, edital: GUIADO, campos: CAMPOS_ANALISE, dataReferencia: HOJE }, ctl.signal)
+      if (v !== versao.current) return // resposta atrasada descartada
+      setFatos(fatosDaAnalise(r)); setRelatoAnalisado(texto); setAnalise('idle'); setEditando({}); setMudanca(null); ir(2)
+    } catch (x) {
+      if (v !== versao.current || (x instanceof ErroIA && x.motivo === 'cancelado')) return
+      setAnalise('falha')
+    } finally { if (chamada.current === ctl) chamada.current = null }
   }
   function declarar(id: string, valor: string) { setFatos(f => { const n = { ...f }; if (!valor.trim()) delete n[id]; else n[id] = { valor, origem: 'usuario', estado: valor === 'Não sei' ? 'nao_sei' : 'informado' }
     if (id === 'evento' && valor !== 'Outro evento') delete n.eventoDesc; return n }) }
@@ -251,7 +249,7 @@ export default function App() {
     const antes = titulos(fatos), depois = titulos(nf)
     setMudanca({ msg: `Os próximos passos foram atualizados porque ${motivoCorrecao(id, novo)}.`, retiradas: antes.filter(t => !depois.includes(t)), novas: depois.filter(t => !antes.includes(t)) })
   }
-  function reset() { versao.current++; setAlcancada(0); setEtapaGuiado(0); setErroModo(false); navegar({ tela: 'orientacao', edital: GUIADO, etapa: 0 }); setModo(''); setRelato(''); setExemplo(false); setFatos({}); setEditando({}); setMudanca(null); setAnalise('idle'); setLimpar(false); setCopiado(''); setCopiadoDe(''); setRelatoAnalisado(''); setConfirmaReanalise(false); setSabeData(''); setMostrarErros(false); setErroRelato('') }
+  function reset() { cancelarAnalise(); setAlcancada(0); setEtapaGuiado(0); setErroModo(false); navegar({ tela: 'orientacao', edital: GUIADO, etapa: 0 }); setModo(''); setRelato(''); setExemplo(false); setFatos({}); setEditando({}); setMudanca(null); setAnalise('idle'); setLimpar(false); setCopiado(''); setCopiadoDe(''); setRelatoAnalisado(''); setConfirmaReanalise(false); setSabeData(''); setMostrarErros(false); setErroRelato('') }
   async function copiar() { try { await navigator.clipboard.writeText(resumo); setCopiado('ok'); setCopiadoDe(resumo) } catch { setCopiado('falha') } }
 
   /* Fato revisável: usado em Conferir e no plano. Chamado como função (não como componente) para o campo não perder o foco ao digitar. */
@@ -310,13 +308,13 @@ export default function App() {
           {exemplo && <p className="inline-block text-sm font-medium bg-slate-200 rounded px-2 py-1">Exemplo fictício</p>}
           <div><label htmlFor="relato" className="font-medium block">O que aconteceu?</label><p id="ajuda" className="text-sm text-slate-700 mt-1">Conte o que ocorreu com você, se precisou sair da própria residência e quando aconteceu. Não inclua CPF, matrícula, endereço completo ou documentos pessoais.</p>
             {erroRelato && <p className="mt-2 text-sm text-red-800 font-medium">{erroRelato}</p>}
-            <textarea id="relato" aria-describedby="ajuda" rows={6} readOnly={analise === 'carregando'} value={relato} onChange={e => { setRelato(e.target.value); setExemplo(false) }} placeholder="Ex.: Minha casa foi atingida por... e precisei..." className={`mt-2 w-full rounded-lg border bg-white p-3 leading-relaxed ${erroRelato ? 'border-red-700' : 'border-slate-300'}`} /></div>
+            <textarea id="relato" aria-describedby="ajuda" rows={6} maxLength={LIMITES.relatoMax} readOnly={analise === 'carregando'} value={relato} onChange={e => { setRelato(e.target.value); setExemplo(false) }} placeholder="Ex.: Minha casa foi atingida por... e precisei..." className={`mt-2 w-full rounded-lg border bg-white p-3 leading-relaxed ${erroRelato ? 'border-red-700' : 'border-slate-300'}`} /></div>
           <div className="flex flex-wrap gap-2"><button className={btnS} onClick={() => { setRelato(EXEMPLO); setExemplo(true); setErroRelato('') }}>Usar exemplo fictício</button><button className={btnS} onClick={() => { setRelato(EXEMPLO_DOIS); setExemplo(true) }}>Exemplo com dois acontecimentos</button><button className={btnS} onClick={() => { setRelato(EXEMPLO_OUTRA); setExemplo(true); setErroRelato('') }}>Exemplo sobre outra pessoa</button></div>
           {analise === 'carregando' && <p role="status" className="flex items-center gap-2 text-[#1f5b47] font-medium"><span className="w-4 h-4 border-2 border-[#1f5b47] border-t-transparent rounded-full animate-spin" />Organizando as informações do relato</p>}
           {analise === 'falha' && <Aviso tipo="erro" titulo="Não foi possível organizar o relato agora.">Você pode responder às perguntas. Seu texto foi mantido.<div className="mt-3 flex flex-wrap gap-2"><button className={btnP} onClick={() => { setModo('perguntas'); setAnalise('idle'); prefillRef() }}>Responder perguntas</button><button className={btnS} onClick={() => analisar()}>Tentar novamente</button></div></Aviso>}
           {relatoMudou && !confirmaReanalise && analise !== 'carregando' && <Aviso tipo="atencao" titulo="O relato mudou depois da análise">As informações em "Conferir informações" ainda vêm da versão anterior. Para usar o texto atual, analise de novo e confira as sugestões outra vez.</Aviso>}
           {confirmaReanalise && <Aviso tipo="atencao" titulo="Analisar de novo substitui as informações atuais">As respostas que você já conferiu ou corrigiu serão trocadas pelas novas sugestões, que precisarão ser conferidas outra vez.<div className="mt-3 flex flex-wrap gap-2"><button className={btnP} onClick={() => analisar(true)}>Analisar e conferir de novo</button><button className={btnS} onClick={() => setConfirmaReanalise(false)}>Manter informações atuais</button></div></Aviso>}
-          <div className="flex flex-wrap gap-3 items-center"><button className={btnS} onClick={() => { if (analise === 'carregando') { versao.current++; setAnalise('idle') } ir(0) }}>Voltar</button><button className={btnP} disabled={analise === 'carregando'} onClick={() => analisar()}>Analisar relato</button></div>
+          <div className="flex flex-wrap gap-3 items-center"><button className={btnS} onClick={() => { if (analise === 'carregando') { cancelarAnalise(); setAnalise('idle') } ir(0) }}>Voltar</button><button className={btnP} disabled={analise === 'carregando'} onClick={() => analisar()}>Analisar relato</button></div>
         </>}
 
         {etapa === 1 && modo === 'perguntas' && <>
@@ -373,7 +371,7 @@ export default function App() {
       <p>Protótipo independente. O que você preenche fica salvo só nesta aba e é apagado ao fechá-la. <button className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900" onClick={() => navegar({ tela: 'sobre' })}>Privacidade</button></p>
       <ApagarDados compacto />
       {/* Só para demonstrar estados do protótipo; não aparece para quem usa o produto. */}
-      {DEMO && <div className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-dashed border-slate-300 px-3 py-2"><span className="font-medium">Modo demonstração</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="accent-[#1f5b47]" checked={simFalha} onChange={e => setSimFalha(e.target.checked)} />Simular falha na organização do relato</label></div>}
+      {DEMO && <div className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-dashed border-slate-300 px-3 py-2"><span className="font-medium">Modo demonstração</span><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="accent-[#1f5b47]" checked={simFalha} onChange={e => { opcoesSimulado.falharRelato = e.target.checked; setSimFalha(e.target.checked) }} />Simular falha na organização do relato</label></div>}
     </div></footer>
   </div>
 }

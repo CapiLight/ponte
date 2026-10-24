@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AREAS, EDITAIS, HOJE, HOJE_ORIGEM, INST, INSTITUICOES, ficticio, dia, fmt, fmtCurto, real, situacao, type Edital, type Situacao } from './editais'
-import { derivarPreparo } from './preparo'
+import { derivarPreparo, planoRegras } from './preparo'
 import { useSalvo } from './persistencia'
 
 /* Mesma linguagem visual da Ponte (verde #1f5b47, superfícies brancas com borda slate). */
@@ -70,7 +70,7 @@ function CartaoEdital({ e, dist, onAbrir }: { e: Edital; dist?: number; onAbrir:
 
 function DetalheEdital({ e, dist, onVoltar, onAbrir, onPreparar }: { e: Edital; dist?: number; onVoltar: () => void; onAbrir: (id: string) => void; onPreparar: () => void }) {
   const i = INST[e.inst], s = situacao(e), h = dia(HOJE)
-  const base = derivarPreparo(e, {}).docs
+  const base = derivarPreparo(planoRegras(e), {}).docs
   const outros = EDITAIS.filter(x => x.inst === e.inst && x.id !== e.id).sort((a, b) => b.publicado.localeCompare(a.publicado))
   const marcos: [string, string, string][] = [
     ['Publicação', e.publicado, ''],
