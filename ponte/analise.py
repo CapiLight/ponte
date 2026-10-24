@@ -19,6 +19,7 @@ import hashlib
 import json
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
@@ -164,6 +165,12 @@ class Relatorio:
     etapas: list[str] = field(default_factory=list)
     descartes: list[str] = field(default_factory=list)
     correcoes: list[str] = field(default_factory=list)
+    ao_registrar_etapa: Callable[[str], None] | None = None
+
+    def registrar_etapa(self, texto: str) -> None:
+        self.etapas.append(texto)
+        if self.ao_registrar_etapa is not None:
+            self.ao_registrar_etapa(texto)
 
     def texto(self) -> str:
         linhas = ["Etapas:", *[f"- {etapa}" for etapa in self.etapas]]
@@ -222,8 +229,9 @@ def analisar_edital(
     cliente: genai.Client,
     hoje: date,
     modelo: str = MODELO_PADRAO,
+    ao_registrar_etapa: Callable[[str], None] | None = None,
 ) -> tuple[Ficha, Relatorio]:
-    relatorio = Relatorio()
+    relatorio = Relatorio(ao_registrar_etapa=ao_registrar_etapa)
     por_chave = {documento.chave: documento for documento in documentos}
 
     chaves = ", ".join(f'"{documento.chave}"' for documento in documentos)
@@ -329,15 +337,16 @@ def _pedir(cliente: genai.Client, modelo: str, instrucoes: str, conteudo: str, e
                 cliente, instrucoes, conteudo, modelo=modelo, tentativas=TENTATIVAS_POR_ETAPA, repetir_falhas_lentas=True, esperar_cota=True
             )
         except FalhaNoModelo as erro:
+            relatorio.registrar_etapa(f"{etapa}: falhou ({erro}) após {time.perf_counter() - inicio:.0f}s")
             raise FalhaNaAnalise(f"{etapa}: {erro}") from erro
         segundos = time.perf_counter() - inicio
         try:
             dados = json.loads(re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", texto))
         except json.JSONDecodeError:
-            relatorio.etapas.append(f"{etapa}: resposta sem JSON válido na tentativa {tentativa} ({segundos:.0f}s)")
+            relatorio.registrar_etapa(f"{etapa}: resposta sem JSON válido na tentativa {tentativa} ({segundos:.0f}s)")
             continue
         if isinstance(dados, dict):
-            relatorio.etapas.append(f"{etapa}: {segundos:.0f}s")
+            relatorio.registrar_etapa(f"{etapa}: {segundos:.0f}s")
             return dados
     raise FalhaNaAnalise(f"{etapa}: o modelo não devolveu JSON válido")
 

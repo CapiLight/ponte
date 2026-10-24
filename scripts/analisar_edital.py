@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import tomllib
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -67,7 +67,10 @@ def main() -> None:
 
     cliente = criar_cliente(ler_chave_da_api(), TEMPO_LIMITE_DO_MODELO_MS)
     try:
-        ficha, relatorio = analisar_edital(opcoes.chave, ordenados, opcoes.pagina, cliente, date.today(), opcoes.modelo)
+        ficha, relatorio = analisar_edital(
+            opcoes.chave, ordenados, opcoes.pagina, cliente, date.today(), opcoes.modelo,
+            ao_registrar_etapa=lambda texto: print(f"[{datetime.now():%H:%M:%S}] {texto}", file=sys.stderr, flush=True),
+        )
     except FalhaNaAnalise as erro:
         sys.exit(f"Análise falhou: {erro}")
 
